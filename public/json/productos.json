@@ -1,0 +1,103 @@
+{ 
+    "productos":[
+        {
+            "id":"010001",
+            "idCategoria": "01",
+            "nombreCategoria": "hamburguesa",
+            "foto":"https://images.pexels.com/photos/3616956/pexels-photo-3616956.jpeg?auto=compress&cs=tinysrgb&w=600",
+            "nombre": "hamburguesa doble",
+            "descripcion": "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. ",
+            "precio": "5000"
+        },
+        {
+            "id":"010002",
+            "idCategoria": "01",
+            "nombreCategoria": "hamburguesa",
+            "foto":"https://images.pexels.com/photos/2271107/pexels-photo-2271107.jpeg?auto=compress&cs=tinysrgb&w=600",
+            "nombre": "hamburguesa pollo",
+            "descripcion": "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. ",
+            "precio": "7000"
+        },
+        {
+            "id":"010003",
+            "idCategoria": "01",
+            "nombreCategoria": "hamburguesa",
+            "foto":"https://images.pexels.com/photos/1556698/pexels-photo-1556698.jpeg?auto=compress&cs=tinysrgb&w=600",
+            "nombre": "hamburguesa cerdo",
+            "descripcion": "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. ",
+            "precio": "3000"
+        },
+        {
+            "id":"010004",
+            "idCategoria": "01",
+            "nombreCategoria": "hamburguesa",
+            "foto":"https://images.pexels.com/photos/750073/pexels-photo-750073.jpeg?auto=compress&cs=tinysrgb&w=600",
+            "nombre": "hamburguesa doble queso",
+            "descripcion": "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. ",
+            "precio": "6500"
+        },
+        {
+            "id":"020001",
+            "idCategoria": "02",
+            "nombreCategoria": "pollo",
+            "foto":"https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg?auto=compress&cs=tinysrgb&w=600",
+            "nombre": "pollo apanado",
+            "descripcion": "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. ",
+            "precio": "9500"
+        },
+        {
+            "id":"020002",
+            "idCategoria": "02",
+            "nombreCategoria": "pollo",
+            "foto":"https://images.pexels.com/photos/60616/fried-chicken-chicken-fried-crunchy-60616.jpeg?auto=compress&cs=tinysrgb&w=600",
+            "nombre": "pollo frito",
+            "descripcion": "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. ",
+            "precio": "19500"
+        },
+        {
+            "id":"020003",
+            "idCategoria": "02",
+            "nombreCategoria": "pollo",
+            "foto":"https://images.pexels.com/photos/698308/pexels-photo-698308.jpeg?auto=compress&cs=tinysrgb&w=600",
+            "nombre": "pollo a la naranja",
+            "descripcion": "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. ",
+            "precio": "34500"
+        },
+        {
+            "id":"030001",
+            "idCategoria": "03",
+            "nombreCategoria": "bebidas",
+            "foto":"https://images.pexels.com/photos/1666061/pexels-photo-1666061.jpeg?auto=compress&cs=tinysrgb&w=600",
+            "nombre": "te frio",
+            "descripcion": "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. ",
+            "precio": "8500"
+        },
+        {
+            "id":"030002",
+            "idCategoria": "03",
+            "nombreCategoria": "bebidas",
+            "foto":"https://images.pexels.com/photos/50593/coca-cola-cold-drink-soft-drink-coke-50593.jpeg?auto=compress&cs=tinysrgb&w=600",
+            "nombre": "gaseosas",
+            "descripcion": "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. ",
+            "precio": "2500"
+        },
+        {
+            "id":"030003",
+            "idCategoria": "03",
+            "nombreCategoria": "bebidas",
+            "foto":"https://images.pexels.com/photos/1267289/pexels-photo-1267289.jpeg?auto=compress&cs=tinysrgb&w=600",
+            "nombre": "cervezas artesanales",
+            "descripcion": "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. ",
+            "precio": "12500"
+        },        
+        {
+            "id":"040001",
+            "idCategoria": "04",
+            "nombreCategoria": "pizza",
+            "foto":"https://images.pexels.com/photos/365459/pexels-photo-365459.jpeg?auto=compress&cs=tinysrgb&w=600",
+            "nombre": "pizza napolitana",
+            "descripcion": "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. ",
+            "precio": "65500"
+        }
+    ]
+}
