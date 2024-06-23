@@ -11,7 +11,7 @@ import Select from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 
-import { MyContext } from "../../../services/myContext";
+import { MyContext } from "../../../services/MyContext";
 
 
 const StyledForm = styled('form')(({ theme }) => ({
@@ -59,7 +59,7 @@ function CardCheckout() {
                                     label="Identificacion"
                                     type="number"
                                     variant="outlined"
-                                    defaultValue={user ? user.data.id : ''}
+                                    defaultValue={user ? user.user.id : ''}
 
                                 />
 
@@ -79,7 +79,7 @@ function CardCheckout() {
                                     id="id"
                                     label="Nombres"
                                     variant="outlined"
-                                    defaultValue={user ? user.data.name : ''}
+                                    defaultValue={user ? user.name : ''}
 
                                 />
                             </Box>
@@ -99,7 +99,7 @@ function CardCheckout() {
                                     label="Telefono"
                                     type="number"
                                     variant="outlined"
-                                    defaultValue={user ? user.data.tel : ''}
+                                    defaultValue={user ? user.tel : ''}
 
                                 />
                             </Box>
@@ -119,7 +119,7 @@ function CardCheckout() {
                                     label="Telefono"
                                     type="number"
                                     variant="outlined"
-                                    defaultValue={user ? user.data.tel : ''}
+                                    defaultValue={user ? user.user.tel : ''}
 
                                 />
                             </Box>

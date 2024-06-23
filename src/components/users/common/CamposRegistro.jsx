@@ -127,6 +127,7 @@ export default function CamposRegistro() {
           console.log('Image file updated:', file); // Log the updated file
         }
       };
+      
     const handleChangeGenero = (event) => {
         setFormData((prevData) => ({
             ...prevData,

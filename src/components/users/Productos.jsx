@@ -21,7 +21,7 @@ import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import PanToolIcon from '@mui/icons-material/PanTool';
 
-import { MyContext } from "../../services/myContext.js";
+import { MyContext } from "../../services/MyContext.jsx";
 import { useContext } from "react";
 
 import { Navigate, useNavigate } from 'react-router-dom';

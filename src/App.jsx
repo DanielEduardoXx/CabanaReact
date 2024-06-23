@@ -12,7 +12,7 @@ import CardRegistro from './components/users/common/CardRegistro'
 import CardPerfil from './components/users/common/CardPerfil'
 import ContinuaCompra from './components/users/common/ContinuaCompra'
 import CardCheckout from './components/users/common/CardCheckout';
-import { MyContext } from './services/myContext';
+import { MyContext, MyProvider } from './services/MyContext.jsx';
 
 
 import { useState } from 'react';
@@ -23,13 +23,11 @@ function App() {
   const [user, setUser] = useState(null);
 
 
-
-
   return (
     <>
 
 
-        <MyContext.Provider value={{ user, setUser }}>
+        <MyProvider value={{ user, setUser }}>
           {user != null ? (<MenuLink />) : (<MenuLink />)}
 
           <Routes>
@@ -42,7 +40,7 @@ function App() {
             <Route path="checkout" element={<CardCheckout />} />
           </Routes>
           
-        </MyContext.Provider>
+        </MyProvider>
 
     </>
   )

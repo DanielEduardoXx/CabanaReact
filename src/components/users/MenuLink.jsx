@@ -12,10 +12,11 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
-import { MyContext } from '../../services/myContext';
+import { MyContext } from '../../services/MyContext';
 
 const pages = ['inicio', 'productos', 'contacto', 'registro', 'iniciar-sesion', 'perfil'];
 const settings = ['Profile', 'Account', 'Dashboard'];
+// const pagerUser = ['inicio', 'productos', 'contacto', 'perfil']
 
 function MenuLink() {
   const navigate = useNavigate();
@@ -110,6 +111,7 @@ function MenuLink() {
                   </Typography>
                 </MenuItem>
               ))}
+
             </Menu>
           </Box>
           <Typography

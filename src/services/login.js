@@ -7,22 +7,26 @@ export const login = async (formData) => {
     const response = await axios.post(`${API_URL}/login`, formData, {
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
+      timeout: 60000 // Aumenta el tiempo de espera a 60 segundos
     });
 
     if (response.status === 200) {
-      const { access_token } = response.data;
-      localStorage.setItem('access_token', access_token); // Guarda el token en localStorage
+      // const { token } = response.data;
+      console.log(response.data)
+      // localStorage.setItem('access_token', token.access_token); // Guarda el token en localStorage
+
       return response.data;
     } else {
-      throw new Error('Las Credenciales No Coinciden');
+      throw new Error('Las credenciales no coinciden');
     }
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const errorMessage = error.response?.data?.message || 'Error desconocido';
       throw new Error(errorMessage);
     } else {
-      throw new Error('Error: No se pudo conectar con el servidor');
+      throw new Error('No se pudo conectar con el servidor');
     }
   }
 };
