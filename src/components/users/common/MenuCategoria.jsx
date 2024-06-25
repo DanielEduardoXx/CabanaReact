@@ -1,69 +1,75 @@
-import Avatar from '@mui/material/Avatar';
-import Stack from '@mui/material/Stack';
-import Box from '@mui/material/Box';
-import Badge from '@mui/material/Badge';
-import IconButton from '@mui/material/IconButton';
+import { useEffect, useState } from 'react';
+import { Box, Typography, IconButton, Badge } from '@mui/material';
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import { allCategorias } from "../../../services/categorias";
+import Button from '@mui/material/Button';
 
-function MenuCategoria({objeto, getValor, noCompras, openModal}) {
-  
-  const handleModal = () =>{
-    openModal(true)
+
+function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
+  const [data, setData] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const ruta = "../../../../public";
+
+  const handleModal = () => {
+    openModal(true);
   }
 
-    const handleOpcion= (myVal) => {
-        getValor(myVal)
-        
-        //console.log (" valor " + myVal)
-     
-      };
- 
+  useEffect(() => {
+    let isMounted = true;
+    const getData = async () => {
+      try {
+        const result = await allCategorias();
+        if (isMounted) {
+          if (Array.isArray(result)) {
+            setData(result);
+          } else {
+            setData([]);
+          }
+          setLoading(false);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err);
+          setLoading(false);
+        }
+      }
+    };
+    getData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-    return (
-        <Box color="primary" marginTop={'1rem'} sx={{ display: 'flex', justifyContent:'center'}}>
-              <Stack  direction="row" spacing={4}>
-            {/* -   pinta el icono menu para mostrar todos los producto scon la opcion 00-  */}
-              <IconButton  key={0} size="large" 
-             onClick={()=> handleOpcion(`00`)}>
-             <Avatar  sx={{ width: 50, height: 50  , margin: '3px'}}
-                alt={'Todos los productos'} src={`./icoMenuA.svg`} 
-                /> 
-           </IconButton>
-         {/* -   pinta el resto de iconos de categoria iterando el vector objeto   */}
-        {objeto.map((item)=>(
-             <IconButton  key={item.idCategoria} size="large" 
-             onClick={()=> handleOpcion(`${item.idCategoria}`)}>
-             <Avatar  sx={{ width: 50, height: 50  , margin: '3px'}}
-                alt={item.nombreCategoria} src={`./${item.idCategoria}.png`} 
-                /> 
-           </IconButton>
-         
-              
-               
+  const handleCategoriaClick = (id) => {
+    getValor(id);
+  };
 
-        ))}
+  if (loading) return <Typography>Cargando...</Typography>;
+  if (error) return <Typography>Error al cargar categorías</Typography>;
 
-         
-         </Stack>
-
-         <Box>
-          {/* -   icono carrito que abre el modal y pinta la cantidad de productos   */}
-          <IconButton
-              aria-label="show 17 new notifications"
-              color="inherit"
-              onClick={handleModal}
-              disabled={noCompras > 0? false: true }
-            >
-              <Badge badgeContent={noCompras} color="error">
-                <AddShoppingCartIcon  sx={{ fontSize:"20"}} color="green" />
-              </Badge>
-            </IconButton>
-          </Box>
-
+  return (
+    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '1rem' }}>
+        <img src={`../../../../public/Hamburguesas.jpg`} alt={'imgTodos'} onClick={() => handleCategoriaClick(null)} style={{ width: '30px', height: '30px' }} />
+        <Typography>Todos</Typography>
       </Box>
-    );
-  }
-  
-  export default MenuCategoria;
+      {data.map(item => (
+        <Box key={item.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '1rem' }}>
+          <img src={`${ruta}/${item.nombre}.jpg`} alt={item.nombre} onClick={() => handleCategoriaClick(item.id)} style={{ width: '30px', height: '30px' }} />
+          <Typography>{item.nombre}</Typography>
 
-  
+        </Box>
+      ))}
+      <IconButton aria-label="show cart items" color="inherit" onClick={handleModal} disabled={noCompras <= 0}>
+        <Badge badgeContent={noCompras} color="error">
+          <AddShoppingCartIcon sx={{ fontSize: 20 }} color="green" />
+        </Badge>
+      </IconButton>
+
+    </Box>
+  );
+}
+
+export default MenuCategoria;

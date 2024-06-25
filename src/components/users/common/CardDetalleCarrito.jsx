@@ -16,9 +16,13 @@ function CardDetalleCarrito({
   noProductos,
   eliminar,
 }) {
-  const [cantidad, setCantidad] = useState(0);
+  const [cantidad, setCantidad] = useState(noProductos);
 
-  const getCantidad = (valor) => { // obtego los cambios en cantidad ... genero un objeto  para enviar al padre  (PRODUCTOS ) con la informacion 
+  useEffect(() => {
+    setCantidad(noProductos);
+  }, [noProductos]);
+
+  const getCantidad = (valor) => {
     setCantidad(valor);
 
     let objeto = {
@@ -29,7 +33,7 @@ function CardDetalleCarrito({
     monitor(objeto);
   };
 
-  const getBorrar = () => { // obtego un objeto para enviar al padre (PRODUCTOS ) con la informacion 
+  const getBorrar = () => {
     let objeto = {
       id: id,
       cantidad: cantidad,
@@ -37,12 +41,14 @@ function CardDetalleCarrito({
     eliminar(objeto);
   };
 
-  // formatear los valores con punto de miles .....
+  // formatear los valores con punto de miles
   let nf = new Intl.NumberFormat("en-US");
-  let subTotal = precio * noProductos;
+  let subTotal = precio * cantidad;
 
   let precioFormat = nf.format(precio);
   let subTotalFormat = nf.format(subTotal);
+
+  console.log('Props in CardDetalleCarrito:', { id, titulo, precio, foto, noProductos, cantidad, subTotal }); // Verifica los props y valores calculados
 
   return (
     <Paper elevation={3} sx={{ margin: "1rem", width: "95%" }}>
@@ -85,6 +91,7 @@ function CardDetalleCarrito({
             <img
               style={{ width: "100%", borderRadius: "0.25rem" }}
               src={foto}
+              alt={titulo}
             />
           </Box>
 
@@ -117,7 +124,7 @@ function CardDetalleCarrito({
             }}
           >
             <CtrlCantidad
-              noProductos={noProductos}
+              noProductos={cantidad}
               getCantidad={getCantidad}
               borrar={getBorrar}
             />
