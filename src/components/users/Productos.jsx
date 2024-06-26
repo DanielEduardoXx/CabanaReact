@@ -1,52 +1,3 @@
-// import { useState, useEffect } from 'react';
-// import MenuCategoria from './common/MenuCategoria';
-// import CardProducto from './common/CardProducto';
-// import { getProductos } from '../../services/productos';
-// import { allProductosCat} from "../../services/productosxCat";
-
-// function PaginaProductos() {
-//   const [productos, setProductos] = useState([]);
-//   const [noCompras, setNoCompras] = useState(0);
-//   const [modalOpen, setModalOpen] = useState(false);
-
-//   const fetchProductos = async (categoriaId) => {
-//     try {
-//       let productos;
-//       if (categoriaId) {
-//         productos = await allProductosCat(categoriaId);
-//       } else {
-//         productos = await getProductos();
-//       }
-//       setProductos(productos);
-//     } catch (error) {
-//       console.error('Error fetching productos:', error);
-//       setProductos([]);
-//     }
-//   };
-
-//   const handleCategoriaSelect = (categoriaId) => {
-//     fetchProductos(categoriaId);
-//   };
-
-//   const handleOpenModal = (open) => {
-//     setModalOpen(open);
-//   };
-
-//   return (
-//     <div>
-//       <MenuCategoria
-//         onCategoriaSelect={handleCategoriaSelect}
-//         noCompras={noCompras}
-//         openModal={handleOpenModal}
-//       />
-//       <CardProducto productos={productos} />
-//     </div>
-//   );
-// }
-
-// export default PaginaProductos;
-
-
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from 'react-router-dom';
 import Dialog from '@mui/material/Dialog';
@@ -67,15 +18,13 @@ import MenuCategoria from "./common/MenuCategoria";
 import CardProducto from "./common/CardProducto";
 import CardDetalleCarrito from "./common/CardDetalleCarrito";
 import CardTotal from "./common/CardTotal";
-import { allProductosCat} from "../../services/productosxCat";
+import { allProductosCat } from "../../services/productosxCat";
 import { getProductos } from '../../services/productos';
 import { addCompra, getCompras, updateFront, deleteCompras } from "../../hooks/useCompras";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
-
-
 
 const style = {
   position: "absolute",
@@ -92,6 +41,7 @@ const style = {
   overflow: "auto",
 };
 
+
 function Productos() {
   const navigate = useNavigate();
   const { user } = useContext(MyContext);
@@ -102,28 +52,24 @@ function Productos() {
   const [carrito, setCarrito] = useState(0);
   const [total, setTotal] = useState(0);
   const [open, setOpen] = useState(false);
-  const [productoEditado, SetProductoEditado] = useState({});
+  const [productoEditado, setProductoEditado] = useState({});
   const [openDialog, setOpenDialog] = useState(false);
 
-
-  const [compras, setCompras] = useState(getCompras()); 
+  const [compras, setCompras] = useState(getCompras());
   const [noCompras, setNoCompras] = useState(compras.length);
 
   const handleCantidadChange = (cantidad) => {
     setNoCompras(cantidad);
   };
 
-
-
   useEffect(() => {
     setCompras(getCompras());
   }, []);
 
-
   const agregarCompra = (compra) => {
     const nuevasCompras = addCompra(compra);
     setCompras(nuevasCompras);
-    setNoCompras(nuevasCompras.length); // Actualizar el número de compras
+    setNoCompras(nuevasCompras.reduce((acc, item) => acc + item.cantidad, 0)); // Actualizar el número de compras
   };
 
   useEffect(() => {
@@ -133,22 +79,6 @@ function Productos() {
     });
     setTotal(newTotal);
   }, [compra]);
-
-  const generarCompra = (item) => {
-    setCompra(prevCompra => {
-      const exist = prevCompra.find(p => p.id === item.id);
-      if (exist) {
-        return prevCompra.map(p =>
-          p.id === item.id ? { ...p, cantidad: item.cantidad } : p
-        );
-      } else {
-        const product = productos.find(p => p.id === item.id);
-        return [...prevCompra, { ...product, cantidad: item.cantidad }];
-      }
-    });
-    setNoCompras(prev => prev + item.cantidad);
-  };
-
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
@@ -179,7 +109,7 @@ function Productos() {
 
   const handleCancelar = () => {
     productoEditado.cantidad = 1;
-    generarCompra(productoEditado);
+    agregarCompra(productoEditado);
     setOpenDialog(false);
   };
 
@@ -195,9 +125,8 @@ function Productos() {
     setTotal(suma);
   }, [filtro]);
 
-
   const actualizarCantidad = (objeto) => {
-    SetProductoEditado(objeto);
+    setProductoEditado(objeto);
     if (objeto.cantidad <= 0) {
       setOpenDialog(true);
     } else {
@@ -224,7 +153,7 @@ function Productos() {
       {!loading ? (
         <CardProducto
           productos={productos}
-          generarCompra={generarCompra}
+          agregarCompra={agregarCompra}
           actualizarCantidad={actualizarCantidad}
           eliminarProducto={eliminarProducto}
           noProductos={noCompras}

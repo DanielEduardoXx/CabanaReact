@@ -14,9 +14,9 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import { MyContext } from '../../services/MyContext';
 
-const pages = ['inicio', 'productos', 'contacto', 'registro', 'iniciar-sesion', 'perfil'];
+const pages = ['inicio', 'productos', 'contacto', 'registro', 'iniciar-sesion'];
+const pagerUser = ['inicio', 'productos', 'contacto', 'perfil'];
 const settings = ['Profile', 'Account', 'Dashboard'];
-// const pagerUser = ['inicio', 'productos', 'contacto', 'perfil']
 
 function MenuLink() {
   const navigate = useNavigate();
@@ -46,6 +46,7 @@ function MenuLink() {
     navigate('/iniciar-sesion');
   };
 
+  const menuItems = user ? pagerUser : pages;
 
   return (
     <AppBar position="static" color="primary">
@@ -55,7 +56,7 @@ function MenuLink() {
             variant="h6"
             noWrap
             component="a"
-            href="#app-bar-with-responsive-menu"
+            href="#"
             sx={{
               mr: 2,
               display: { xs: 'none', md: 'flex' },
@@ -68,8 +69,6 @@ function MenuLink() {
           >
             LA CABAÑA
           </Typography>
-
-          {/* <Typography>{user.name} {''}</Typography> */}
 
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
             <IconButton
@@ -100,25 +99,22 @@ function MenuLink() {
                 display: { xs: 'block', md: 'none' },
               }}
             >
-              {pages.map((page) => (
+              {menuItems.map((page) => (
                 <MenuItem key={page} onClick={handleCloseNavMenu}>
                   <Typography textAlign="center">
                     <Link to={`/${page.replace(/ /g, '-')}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                       {page}
                     </Link>
-
-
                   </Typography>
                 </MenuItem>
               ))}
-
             </Menu>
           </Box>
           <Typography
             variant="h5"
             noWrap
             component="a"
-            href="#app-bar-with-responsive-menu"
+            href="#"
             sx={{
               mr: 2,
               display: { xs: 'flex', md: 'none' },
@@ -133,7 +129,7 @@ function MenuLink() {
             LA CABAÑA
           </Typography>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((page) => (
+            {menuItems.map((page) => (
               <Button
                 key={page}
                 onClick={handleCloseNavMenu}
@@ -169,7 +165,6 @@ function MenuLink() {
               onClose={handleCloseUserMenu}
             >
               {settings.map((setting) => (
-
                 <MenuItem key={setting} onClick={handleCloseUserMenu}>
                   <Typography textAlign="center">{setting}</Typography>
                 </MenuItem>

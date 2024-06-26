@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { Box, Typography, IconButton, Badge } from '@mui/material';
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import { allCategorias } from "../../../services/categorias";
-import Button from '@mui/material/Button';
-
 
 function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
   const [data, setData] = useState([]);
@@ -14,7 +12,7 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
 
   const handleModal = () => {
     openModal(true);
-  }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -59,7 +57,6 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
         <Box key={item.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '1rem' }}>
           <img src={`${ruta}/${item.nombre}.jpg`} alt={item.nombre} onClick={() => handleCategoriaClick(item.id)} style={{ width: '30px', height: '30px' }} />
           <Typography>{item.nombre}</Typography>
-
         </Box>
       ))}
       <IconButton aria-label="show cart items" color="inherit" onClick={handleModal} disabled={noCompras <= 0}>
@@ -67,7 +64,6 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
           <AddShoppingCartIcon sx={{ fontSize: 20 }} color="green" />
         </Badge>
       </IconButton>
-
     </Box>
   );
 }

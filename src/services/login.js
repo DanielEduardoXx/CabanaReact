@@ -7,7 +7,7 @@ export const login = async (formData) => {
     const response = await axios.post(`${API_URL}/login`, formData, {
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
       },
       timeout: 60000 // Aumenta el tiempo de espera a 60 segundos
     });

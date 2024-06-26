@@ -23,7 +23,7 @@ const StyledForm = styled('form')(({ theme }) => ({
 }));
 
 const Perfil = () => {
-    const { user, loading } = useContext(MyContext);
+    const { user, setUser, loading } = useContext(MyContext);
     const [open, setOpen] = useState(false);
     const [message, setMessage] = useState('');
     const [formData, setFormData] = useState({
@@ -78,7 +78,11 @@ const Perfil = () => {
             };
 
             await updateUser(userId, updatedData);
+
+            setUser(updatedData);
+
             setMessage('Usuario actualizado correctamente');
+            handleClose()
         } catch (error) {
             setMessage(error.message);
         }

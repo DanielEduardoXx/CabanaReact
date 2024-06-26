@@ -11,7 +11,6 @@ import { getProductos } from "../services/productos";
 import {
   getMenu,
   getCompras,
-  setCompras,
   addCompra,
   updateCompra,
   deleteCompras,
@@ -53,23 +52,22 @@ const ProductosFuncional = () => {
         setLoading(false);
       } catch (error) {
         console.error("Error al cargar productos:", error);
+        setLoading(false);
       }
     };
 
     cargarProductos();
   }, []);
 
-  const opcionMenu = (opcion) => {
+  const opcionMenu = async (opcion) => {
     setLoading(true);
     if (opcion === "00") {
-      setFiltro(getProductos());
+      setFiltro(await getProductos()); // Asegúrate de esperar el resultado
     } else {
-      const result = getfiltro(getProductos(), opcion);
+      const result = await getfiltro(await getProductos(), opcion); // Asegúrate de esperar el resultado
       setFiltro(result);
     }
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
+    setLoading(false);
   };
 
   const handleOpen = () => setOpen(true);
@@ -127,7 +125,7 @@ const ProductosFuncional = () => {
         openModal={handleOpen}
       />
 
-      {!loading ? (
+      {loading ? (
         <Box sx={{ width: "100%" }}>
           <LinearProgress />
         </Box>
@@ -160,24 +158,23 @@ const ProductosFuncional = () => {
           {compra.map((item) => (
             <CardDetalleCarrito
               key={item.id}
-              id={item.id}
-              titulo={item.titulo}
-              precio={item.precio}
-              foto={item.foto}
+              id={item.id || ''}
+              titulo={item.nom_producto || 'Sin título'}
+              precio={item.precio_producto || 0}
+              foto={item.foto || ''}
               noProductos={item.cantidad}
-                monitor={actualizarCompra}
-                confirmar={actualizarCompra}
-                eliminar={eliminarProducto}
-              />
-            ))}
-  
-            <CardTotal valor={total} />
-  
-            <Button onClick={handleClose}>Cerrar</Button>
-          </Box>
-        </Modal>
-      </Box>
-    );
-  };
-  
-  export default ProductosFuncional;
+              monitor={actualizarCompra}
+              eliminar={eliminarProducto}
+            />
+          ))}
+
+          <CardTotal valor={total} />
+
+          <Button onClick={handleClose}>Cerrar</Button>
+        </Box>
+      </Modal>
+    </Box>
+  );
+};
+
+export default ProductosFuncional;

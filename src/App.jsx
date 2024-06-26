@@ -28,7 +28,7 @@ function App() {
 
 
         <MyProvider value={{ user, setUser }}>
-          {user != null ? (<MenuLink />) : (<MenuLink />)}
+         <MenuLink />
 
           <Routes>
             <Route path="inicio" element={<Inicio />} />

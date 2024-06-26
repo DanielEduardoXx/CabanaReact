@@ -2,18 +2,20 @@ import axios from 'axios';
 
 export const updateUser = async (userId, formData) => {
     try {
-        const token = localStorage.getItem('access_token');
+        // const token = localStorage.getItem('access_token');
         const API_URL = 'http://127.0.0.1:8000/api/V1';
 
 
-        if (!token) {
-            throw new Error('Token de acceso no encontrado');
-        }
+        // if (!token) {
+        //     throw new Error('Token de acceso no encontrado');
+        // }
 
         console.log(`PUT request to: ${API_URL}/users/${userId}`);
         console.log('Headers:', {
-            'Authorization': `Bearer ${token}`,
+            // 'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
+
         });
         console.log('Form Data:', formData);
 
