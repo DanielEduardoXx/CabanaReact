@@ -71,7 +71,7 @@ function CardDetalleCarrito({
 
         <Grid item xs={12} md={1}>
           <Typography fontSize={20} textAlign="center">
-            v/u ${precioFormat}
+            ${precioFormat}
           </Typography>
         </Grid>
 

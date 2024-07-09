@@ -1,11 +1,18 @@
 import { Box, Paper, Typography, Grid, Button } from "@mui/material";
 import CtrlCantidad from "./CtrlCantidad";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function CardProducto({ productos, agregarCompra, actualizarCantidad, eliminarProducto, noProductos }) {
-  const [cantidades, setCantidades] = useState({});
+  const [cantidades, setCantidades] = useState(() => {
+    const savedCantidades = localStorage.getItem("cantidades");
+    return savedCantidades ? JSON.parse(savedCantidades) : {};
+  });
 
-  const ruta = "../../../../public";
+  useEffect(() => {
+    localStorage.setItem("cantidades", JSON.stringify(cantidades));
+  }, [cantidades]);
+
+  const ruta = "../../../../../public";
 
   const handleCantidadChange = (id, valor) => {
     setCantidades(prevCantidades => ({
@@ -21,7 +28,7 @@ function CardProducto({ productos, agregarCompra, actualizarCantidad, eliminarPr
       producto: producto,
     };
     agregarCompra(compra);
-    handleCantidadChange(producto.id, 0); // Reset cantidad a 0 después de la compra
+    // handleCantidadChange(producto.id, 0); // Reset cantidad a 0 después de la compra
   };
 
   return (
@@ -31,32 +38,33 @@ function CardProducto({ productos, agregarCompra, actualizarCantidad, eliminarPr
           productos.map((producto) => (
             <Grid item xs={12} sm={6} md={4} key={producto.id}>
               <Paper elevation={3} sx={{ padding: "1rem" }}>
-                <Box sx={{ display: 'flex', justifyContent:'space-between', alignItems:'center'}}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Box>
-                    <Typography variant="h6">{producto.nombre}</Typography>
+                    <Typography variant="h6">{producto.nombre || producto.nom_producto}</Typography>
                     <img
                       // src={producto.foto}
-                      src={`${ruta}/'hamburguesas.jpg`}
+                      // src={`${ruta}/'Hamburguesas.jpg`}
+                      src={`${ruta}/Hamburguesas.jpg`}
                       alt={producto.nombre}
                       style={{ width: "100px", height: "100px" }}
                     />
                     <Typography variant="body1">
-                      Precio: {producto.precio}
-                      ID: {producto.id}
+                      Precio: {producto.precio || producto.precio_producto}
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                     <Box>
                       <CtrlCantidad
-                        noProductos={noProductos[producto.id] || 0}
+                        noProductos={cantidades[producto.id] || 0}
                         getCantidad={(valor) => handleCantidadChange(producto.id, valor)}
                       />
                     </Box>
-                    <Box sx={{display:'flex', justifyContent:'center'}}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                       <Button
                         variant="contained"
                         color="primary"
                         onClick={() => handleComprar(producto)}
+                        disabled={!(cantidades[producto.id] > 0)}
                       >
                         Comprar
                       </Button>
@@ -67,7 +75,9 @@ function CardProducto({ productos, agregarCompra, actualizarCantidad, eliminarPr
             </Grid>
           ))
         ) : (
-          <Typography variant="body1">No hay productos disponibles</Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Typography variant="body1">Elige una Categoria</Typography>
+          </Box>
         )}
       </Grid>
     </Box>

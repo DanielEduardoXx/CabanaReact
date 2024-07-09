@@ -13,7 +13,7 @@ function CardTotal({ valor }) {
   let valorFormat = nf.format(valor);
 
 
-
+  console.log('valor total', { valor })
 
   return (
     <Paper
@@ -24,12 +24,12 @@ function CardTotal({ valor }) {
         sx={{
           display: "flex",
           width: "100%",
-          justifyContent:'center',
+          justifyContent: 'center',
           background: "#48C9B0",
 
         }}
       >
-        <Box sx={{ padding: "0.5rem", marginRight: "2rem"}}>
+        <Box sx={{ padding: "0.5rem", marginRight: "2rem" }}>
 
           <Typography fontSize={22} textAlign={"left"}>
             Valor Total  $ {valorFormat}
@@ -37,9 +37,7 @@ function CardTotal({ valor }) {
 
 
         </Box>
-
       </Box>
-
 
     </Paper>
   );

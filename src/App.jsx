@@ -13,7 +13,7 @@ import CardPerfil from './components/users/common/CardPerfil'
 import ContinuaCompra from './components/users/common/ContinuaCompra'
 import CardCheckout from './components/users/common/CardCheckout';
 import { MyContext, MyProvider } from './services/MyContext.jsx';
-
+import Footer from './components/users/Footer.jsx';
 
 import { useState } from 'react';
 
@@ -27,8 +27,8 @@ function App() {
     <>
 
 
-        <MyProvider value={{ user, setUser }}>
-         <MenuLink />
+      <MyProvider value={{ user, setUser }}>
+        <MenuLink />
 
           <Routes>
             <Route path="inicio" element={<Inicio />} />
@@ -39,9 +39,11 @@ function App() {
             <Route path="continua compra" element={<ContinuaCompra />} />
             <Route path="checkout" element={<CardCheckout />} />
           </Routes>
-          
-        </MyProvider>
 
+
+      </MyProvider>
+
+      <Footer />
     </>
   )
 }

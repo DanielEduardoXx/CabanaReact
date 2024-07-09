@@ -1,34 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { styled } from '@mui/material/styles';
 import TextField from '@mui/material/TextField';
-
-
-
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
-import axios from 'axios';
-import dayjs from 'dayjs'
+import dayjs from 'dayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateField } from '@mui/x-date-pickers/DateField';
-
-
-//Para los SELECT
-
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import FormHelperText from '@mui/material/FormHelperText';
-
-
-import { Navigate, useNavigate } from 'react-router-dom';
-
-
-//
+import { useNavigate } from 'react-router-dom';
 import * as yup from 'yup';
+import registro from '../../../services/registro';
+
 
 const StyledForm = styled('form')(({ theme }) => ({
     '& > *': {
@@ -37,35 +26,27 @@ const StyledForm = styled('form')(({ theme }) => ({
         display: { md: 'flex', sm: 'flex' },
         alignItems: { xs: 'center', md: 'center', sm: 'center' },
         alignContent: { xs: 'center', md: 'center', sm: 'center' },
-
-
     },
 }));
 
 const validationSchema = yup.object({
-
     email: yup.string().email('Debe ser un correo válido').required('Campo requerido'),
     password: yup.string()
         .required('Campo requerido').min(6, 'Debe tener al menos 6 caracteres')
         .matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/, 'Debe contener letras, números y un caracter especial'),
-
     password_confirmation: yup.string()
         .oneOf([yup.ref('password'), null], 'Las contraseñas deben coincidir')
         .required('Campo requerido'),
     id: yup.string().required('Campo requerido').nullable(),
     direccion: yup.string().required('Campo requerido').nullable(),
-
     name: yup.string().required('Nombre es Requerido'),
     tipo_doc: yup.string().required('Tipo de Documento es Requerido'),
     tel: yup.string().required('Teléfono es Requerido'),
     fecha_naci: yup.date().required('Fecha de Nacimiento es Requerido'),
     genero: yup.string().required('Género es Requerido'),
-
-
 });
 
 export default function CamposRegistro() {
-
     const [formData, setFormData] = useState({
         id: '',
         name: '',
@@ -85,49 +66,40 @@ export default function CamposRegistro() {
     const fechaNacimiento = formData.fecha_naci;
     const validacionEdad = fechaActual.diff(fechaNacimiento, 'year');
 
-
-
-    console.log(validacionEdad)
-
-
     const [errors, setErrors] = useState({});
     const [errorPasswords, setErrorPasswords] = useState();
     const [errorFechaNaci, setErrorFechaNaci] = useState();
+    const [errorId, setErrorId] = useState();
     const [registroSatisfactorio, setRegistroSatisfactorio] = useState();
     const navigate = useNavigate();
-
 
     const handleChange = (event) => {
         const { id, value } = event.target;
         setFormData((prevData) => ({
             ...prevData,
-
             [id]: value,
         }));
-
-        console.log(id, value)
     };
-    const handleImageChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-          console.log('Selected file:', file);  // Log the selected file
-          if (!file.type.startsWith('image/')) {
-            setErrors('Please select a valid image file');
-            return;
-          }
-          if (file.size > 2 * 1024 * 1024) { // 2MB
-            setErrors('File size should be less than 2MB');
-            return;
-          }
-          setErrors('');
-          setFormData((prevData) => ({
-            ...prevData,
-            image: file,
-          }));
-          console.log('Image file updated:', file); // Log the updated file
-        }
-      };
-      
+
+    // const handleImageChange = (event) => {
+    //     const file = event.target.files[0];
+    //     if (file) {
+    //         if (!file.type.startsWith('image/')) {
+    //             setErrors('Please select a valid image file');
+    //             return;
+    //         }
+    //         if (file.size > 2 * 1024 * 1024) { // 2MB
+    //             setErrors('File size should be less than 2MB');
+    //             return;
+    //         }
+    //         setErrors('');
+    //         setFormData((prevData) => ({
+    //             ...prevData,
+    //             image: file,
+    //         }));
+    //     }
+    // };
+
     const handleChangeGenero = (event) => {
         setFormData((prevData) => ({
             ...prevData,
@@ -140,14 +112,13 @@ export default function CamposRegistro() {
             ...prevData,
             tipo_doc: event.target.value,
         }));
-    }
+    };
 
     const handleDateChange = (newValue) => {
         setFormData((prevData) => ({
             ...prevData,
             fecha_naci: newValue, // Actualizar con dayjs object
         }));
-        console.log(newValue)
     };
 
     const validate = () => {
@@ -155,13 +126,13 @@ export default function CamposRegistro() {
 
         if (formData.password !== formData.password_confirmation) {
             isValid = false;
-
-            setErrorPasswords('Las Contraseñas no coinciden')
-
+            setErrorPasswords('Las Contraseñas no coinciden');
             return false;
         }
+
         if (validacionEdad < 18 || fechaNacimiento > fechaActual || validacionEdad > 100) {
-            setErrorFechaNaci('Imposible registrar esta Fecha de Nacimiento')
+            setErrorFechaNaci('Imposible registrar esta Fecha de Nacimiento');
+            return false;
         }
 
         try {
@@ -196,35 +167,33 @@ export default function CamposRegistro() {
         }
     }, [errorFechaNaci]);
 
+    useEffect(() => {
+        if (errorId) {
+            const timer = setTimeout(() => {
+                setErrorId('');
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [errorId]);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
 
         if (validate()) {
             try {
-                const formattedFechaNaci = formData.fecha_naci.format('YYYY-MM-DD');
-                const response = await axios.post('http://127.0.0.1:8000/api/V1/registro', {
-                    ...formData,
-                    fecha_naci: formattedFechaNaci,
-
-
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        'enctype': "multipart/form-data",
-                    },
-                });
+                const response = await registro.registrarUsuario(formData);
                 setTimeout(() => {
-                    navigate('../iniciar-sesion')
+                    navigate('../iniciar-sesion');
                 }, 2000);
-
-                console.log('Success:', response.data);
+                setRegistroSatisfactorio('¡Enhorabuena! Te haz registrado Correctamente');
+                console.log('Success:', response);
             } catch (error) {
                 console.error('Error:', error.response?.data || error.message);
+                if (error) {
+                    setErrorId('Parece que ya tienes una cuenta');
+                }
             }
-
-            setRegistroSatisfactorio('¡Enhorabuena! Te haz registrado Correctamente')
         }
-
     };
     return (
 
@@ -241,6 +210,13 @@ export default function CamposRegistro() {
 
                 <Stack sx={{ width: '100%' }} spacing={2}>
                     <Alert severity="error">{errorFechaNaci}</Alert>
+                </Stack>
+
+            )}
+            {errorId && (
+
+                <Stack sx={{ width: '100%' }} spacing={2}>
+                    <Alert severity="error">{errorId}</Alert>
                 </Stack>
 
             )}
@@ -425,7 +401,7 @@ export default function CamposRegistro() {
 
                         />
                     </Box>
-
+                    {/* 
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         <input
                             type="file"
@@ -434,7 +410,7 @@ export default function CamposRegistro() {
                             onChange={handleImageChange}
                             accept="image/*"
                         />
-                    </Box>
+                    </Box> */}
                 </Box >
 
 

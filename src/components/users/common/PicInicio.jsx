@@ -1,5 +1,7 @@
 import React from 'react';
 import headerImage from '../../../../public/picInicio.jpg'; // Asegúrate de que la ruta sea correcta
+import { MyContext } from '../../../services/MyContext';
+import { useContext } from "react";
 
 const headerStyle = {
   background: `linear-gradient(to right, rgba(33, 29, 29, 0.887), rgba(33, 29, 29, 0.887)), url(${headerImage})`,
@@ -18,10 +20,22 @@ const headerStyle = {
   boxShadow: '1px 14px 50px -2px rgba(59, 59, 59, 0.47)',
 };
 
+
 const HeaderComponent = () => {
+
+  const { user, setUser } = useContext(MyContext);
   return (
+    
     <div style={headerStyle}>
-      <h1>Bienvenido</h1>
+      {user ? (
+        <div>
+          <h1>Bienvenido, {user.name}</h1>
+        </div>
+      ) : (
+        <div>
+          <h1>Bienvenido</h1>
+        </div>
+      )}
     </div>
   );
 };

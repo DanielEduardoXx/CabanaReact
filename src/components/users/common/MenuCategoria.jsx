@@ -49,21 +49,23 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
 
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '1rem' }}>
-        <img src={`../../../../public/Hamburguesas.jpg`} alt={'imgTodos'} onClick={() => handleCategoriaClick(null)} style={{ width: '30px', height: '30px' }} />
-        <Typography>Todos</Typography>
-      </Box>
-      {data.map(item => (
-        <Box key={item.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '1rem' }}>
-          <img src={`${ruta}/${item.nombre}.jpg`} alt={item.nombre} onClick={() => handleCategoriaClick(item.id)} style={{ width: '30px', height: '30px' }} />
-          <Typography>{item.nombre}</Typography>
+      <Box sx={{ display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap', padding: '1rem' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0 1rem' }}>
+          <img src={`../../../../public/Hamburguesas.jpg`} alt={'imgTodos'} onClick={() => handleCategoriaClick(null)} style={{ width: '30px', height: '30px' }} />
+          <Typography>Todos</Typography>
         </Box>
-      ))}
-      <IconButton aria-label="show cart items" color="inherit" onClick={handleModal} disabled={noCompras <= 0}>
-        <Badge badgeContent={noCompras} color="error">
-          <AddShoppingCartIcon sx={{ fontSize: 20 }} color="green" />
-        </Badge>
-      </IconButton>
+        {data.map(item => (
+          <Box key={item.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0 1rem' }}>
+            <img src={`${ruta}/${item.nombre}.jpg`} alt={item.nombre} onClick={() => handleCategoriaClick(item.id)} style={{ width: '30px', height: '30px' }} />
+            <Typography>{item.nombre}</Typography>
+          </Box>
+        ))}
+        <IconButton aria-label="show cart items" color="inherit" onClick={handleModal} disabled={noCompras <= 0}>
+          <Badge badgeContent={noCompras} color="error">
+            <AddShoppingCartIcon sx={{ fontSize: 20 }} color="green" />
+          </Badge>
+        </IconButton>
+      </Box>
     </Box>
   );
 }
