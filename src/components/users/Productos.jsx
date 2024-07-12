@@ -207,8 +207,8 @@ function Productos() {
               <CardDetalleCarrito
                 key={item.id}
                 id={item.id}
-                titulo={item.producto.nombre}
-                precio={item.producto.precio}
+                titulo={item.producto.nom_producto}
+                precio={item.producto.precio_producto}
                 detalle={item.producto.detalle}
                 foto={item.producto.foto || `${ruta}/Hamburguesas.jpg`}
                 noProductos={item.cantidad}

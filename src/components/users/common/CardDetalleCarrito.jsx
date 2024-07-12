@@ -6,7 +6,6 @@ import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CtrlCantidad from "./CtrlCantidad";
-import CardProducto from "./CardProducto";
 
 function CardDetalleCarrito({
   id,

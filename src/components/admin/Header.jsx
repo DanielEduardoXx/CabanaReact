@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { AppBar, Toolbar, Box, Input, Button, Typography, Menu, MenuItem } from '@mui/material';
+import React, { useState, useContext } from 'react';
+import { AppBar, Toolbar, Box, Input, Button, Typography, Menu, MenuItem,  } from '@mui/material';
+import { MyContext } from '../../services/MyContext';
 
 const Header = ({ onSearch }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const { user, setUser } = useContext(MyContext);
 
   const handleAvatarClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -15,6 +17,7 @@ const Header = ({ onSearch }) => {
 
   const handleLogout = () => {
     console.log('Cerrar sesión');
+    setUser(null);
     handleClose();
   };
 

@@ -44,13 +44,13 @@ export default function CamposLogin() {
     event.preventDefault();
     setLoading(true);
     try {
-      const data = await login(formData, setUser);
-      setUser(data.user);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      const userData = await login(formData);
+      setUser(userData); // Actualiza el contexto con la información del usuario
+      localStorage.setItem('user', JSON.stringify(userData)); // Guarda la información del usuario en localStorage
       setCredencialesCorrectas('Haz Iniciado Sesion Correctamente');
       setLoading(false);
       setTimeout(() => {
-        navigate('/inicio');
+        navigate('/');
       }, 1000);
     } catch (error) {
       setErrorInicio(`Error: ${error.message}`);
@@ -81,6 +81,7 @@ export default function CamposLogin() {
       const timer = setTimeout(() => {
         setErrorInicio('');
       }, 3000);
+      return () => clearTimeout(timer);
     }
   }, [errorInicio]);
 
@@ -120,7 +121,7 @@ export default function CamposLogin() {
             }}
             id="email"
             label="Email"
-            type= "email"
+            type="email"
             variant="outlined"
             value={formData.email}
             onChange={handleChange}

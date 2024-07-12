@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 
-const Footer = () => {
+const FooterAdmin = () => {
   return (
     <Box
       sx={{
@@ -20,4 +20,4 @@ const Footer = () => {
   );
 };
 
-export default Footer;
+export default FooterAdmin;

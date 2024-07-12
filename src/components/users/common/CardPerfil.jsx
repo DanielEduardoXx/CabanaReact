@@ -38,11 +38,11 @@ const Perfil = () => {
     useEffect(() => {
         if (user) {
             setFormData({
-                id: user.id || '',
-                name: user.name || '',
-                email: user.email || '',
-                direccion: user.direccion || '',
-                tel: user.tel || ''
+                id: user.user.id || '',
+                name: user.user.name || '',
+                email: user.user.email || '',
+                direccion: user.user.direccion || '',
+                tel: user.user.tel || ''
             });
         }
     }, [user]);
@@ -110,27 +110,27 @@ const Perfil = () => {
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                         <Typography variant="h2" component="h2" sx={{ paddingTop: '1rem', minWidth: { md: '100%' }, display: { xs: 'flex', sm: 'flex', md: 'flex' }, flexDirection: { xs: 'column', sm: 'column', md: 'row' }, alignItems: { xs: 'center', sm: 'center' } }}>
                             <Box sx={{ minWidth: { md: '50%' } }}>Cedula</Box>
-                            <Box sx={{ minWidth: { md: '50%' } }}>{user ? user.id : ''}</Box>
+                            <Box sx={{ minWidth: { md: '50%' } }}>{user ? user.user.id : ''}</Box>
                         </Typography>
 
                         <Typography variant="h2" component="h2" sx={{ paddingTop: '1rem', minWidth: { md: '100%' }, display: { xs: 'flex', sm: 'flex', md: 'flex' }, flexDirection: { xs: 'column', sm: 'column', md: 'row' }, alignItems: { xs: 'center', sm: 'center' } }}>
                             <Box sx={{ minWidth: { md: '50%' } }}>Nombre</Box>
-                            <Box sx={{ minWidth: { md: '50%' } }}>{user ? user.name : ''}</Box>
+                            <Box sx={{ minWidth: { md: '50%' } }}>{user ? user.user.name : ''}</Box>
                         </Typography>
 
                         <Typography variant="h2" component="h2" sx={{ paddingTop: '1rem', minWidth: { md: '100%' }, display: { xs: 'flex', sm: 'flex', md: 'flex' }, flexDirection: { xs: 'column', sm: 'column', md: 'row' }, alignItems: { xs: 'center', sm: 'center' } }}>
                             <Box sx={{ minWidth: { md: '50%' } }}>Correo</Box>
-                            <Box sx={{ minWidth: { md: '50%' } }}>{user ? user.email : ''}</Box>
+                            <Box sx={{ minWidth: { md: '50%' } }}>{user ? user.user.email : ''}</Box>
                         </Typography>
 
                         <Typography variant="h2" component="h2" sx={{ paddingTop: '1rem', minWidth: { md: '100%' }, display: { xs: 'flex', sm: 'flex', md: 'flex' }, flexDirection: { xs: 'column', sm: 'column', md: 'row' }, alignItems: { xs: 'center', sm: 'center' } }}>
                             <Box sx={{ minWidth: { md: '50%' } }}>Teléfono</Box>
-                            <Box sx={{ minWidth: { md: '50%' } }}>{user ? user.tel : ''}</Box>
+                            <Box sx={{ minWidth: { md: '50%' } }}>{user ? user.user.tel : ''}</Box>
                         </Typography>
 
                         <Typography variant="h2" component="h2" sx={{ paddingTop: '1rem', minWidth: { md: '100%' }, display: { xs: 'flex', sm: 'flex', md: 'flex' }, flexDirection: { xs: 'column', sm: 'column', md: 'row' }, alignItems: { xs: 'center', sm: 'center' } }}>
                             <Box sx={{ minWidth: { md: '50%' } }}>Dirección</Box>
-                            <Box sx={{ minWidth: { md: '50%', xs: '50%' } }}>{user ? user.direccion : ''}</Box>
+                            <Box sx={{ minWidth: { md: '50%', xs: '50%' } }}>{user ? user.user.direccion : ''}</Box>
                         </Typography>
 
                         <div>
@@ -139,7 +139,7 @@ const Perfil = () => {
                                 <Box sx={style}>
                                     <StyledForm noValidate autoComplete="off" onSubmit={handleSubmit} sx={{ width: '100%' }}>
                                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                            <TextField sx={{ margin: '5px 0', width: { xs: '100%' } }} name="id" label="Identificacion" type="number" variant="outlined" value={user ? user.id : ''} onChange={handleChange} />
+                                            <TextField sx={{ margin: '5px 0', width: { xs: '100%' } }} name="id" label="Identificacion" type="number" variant="outlined" value={user ? formData.id : ''} onChange={handleChange} />
                                         </Box>
 
                                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
