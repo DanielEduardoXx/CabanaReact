@@ -1,7 +1,6 @@
 // UserApp.jsx
-import React, { useContext } from 'react';
+import React from 'react';
 import { Route, Routes } from 'react-router-dom';
-import { MyContext } from './services/MyContext.jsx';
 import Inicio from './components/users/Inicio';
 import MenuLink from './components/users/MenuLink';
 import Productos from './components/users/Productos';
@@ -13,8 +12,6 @@ import CardCheckout from './components/users/common/CardCheckout';
 import Footer from './components/users/Footer.jsx';
 
 const UserApp = () => {
-  const { user } = useContext(MyContext);
-
   return (
     <>
       <MenuLink />

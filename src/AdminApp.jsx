@@ -1,6 +1,5 @@
 // AdminApp.jsx
-import React, { useContext, useState } from 'react';
-import { MyContext } from './services/MyContext.jsx';
+import React, { useState } from 'react';
 import Header from './components/admin/Header';
 import MenuLateral from './components/admin/MenuLateral';
 import VentasComponent from './components/admin/VentasComponent';
@@ -11,10 +10,9 @@ import MateriaPrimaComponent from './components/admin/MateriaPrimaComponent';
 import ProductosComponent from './components/admin/ProductosComponent';
 import CategoriasComponent from './components/admin/CategoriasComponent';
 import SugerenciasComponent from './components/admin/SugerenciasComponent';
-import Footer from './components/users/Footer.jsx';
+import FooterAdmin from './components/admin/FooterAdmin';
 
 const AdminApp = () => {
-  const { user } = useContext(MyContext);
   const [selectedComponent, setSelectedComponent] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -39,7 +37,7 @@ const AdminApp = () => {
       {selectedComponent === 'Productos' && <ProductosComponent searchQuery={searchQuery} />}
       {selectedComponent === 'Categorias' && <CategoriasComponent searchQuery={searchQuery} />}
       {selectedComponent === 'Sugerencias' && <SugerenciasComponent searchQuery={searchQuery} />}
-      <Footer />
+      <FooterAdmin />
     </>
   );
 };
