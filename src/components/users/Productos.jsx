@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from 'react-router-dom';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -20,7 +20,7 @@ import CardDetalleCarrito from "./common/CardDetalleCarrito";
 import CardTotal from "./common/CardTotal";
 import { allProductosCat } from "../../services/productosxCat";
 import { getProductos } from '../../services/productos';
-import { addCompra, getCompras, setCompras, updateFront, deleteCompras } from "../../hooks/useCompras"; // Asegúrate de importar correctamente setCompras
+import { addCompra, getCompras, updateFront, deleteCompras, mergeCarts } from "../../hooks/useCompras";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -44,58 +44,54 @@ const style = {
 function Productos() {
   const navigate = useNavigate();
   const { user } = useContext(MyContext);
+  const userId = user ? user.user.id : "guest";
   const [productos, setProductos] = useState([]);
   const [filtro, setFiltro] = useState([]);
   const [loading, setLoading] = useState(false);
   const [compra, setCompra] = useState([]);
+  const [carrito, setCarrito] = useState(0);
   const [total, setTotal] = useState(0);
   const [open, setOpen] = useState(false);
   const [productoEditado, setProductoEditado] = useState({});
   const [openDialog, setOpenDialog] = useState(false);
 
-  // Cargar carrito desde localStorage al iniciar
-  useEffect(() => {
-    const storedCart = getCompras(user?.id || "guest");
-    setCompra(storedCart);
-  }, [user]);
+  const [compras, setCompras] = useState(getCompras(userId));
+  const [noCompras, setNoCompras] = useState(compras.length);
 
-  // Guardar carrito en localStorage cuando cambia
-  useEffect(() => {
-    setCompras(compra, user?.id || "guest");
-  }, [compra, user]);
-
-  // Fusionar carritos de guest y user al iniciar sesión
-  const fusionarCarritos = () => {
-    if (user) {
-      const comprasGuest = getCompras("guest");
-      if (comprasGuest.length > 0) {
-        const comprasUsuario = getCompras(user.id);
-        const nuevasCompras = [...comprasGuest, ...comprasUsuario];
-
-        const comprasUnicas = nuevasCompras.reduce((acc, current) => {
-          const x = acc.find(item => item.id === current.id);
-          if (!x) {
-            return acc.concat([current]);
-          } else {
-            x.cantidad += current.cantidad;
-            return acc;
-          }
-        }, []);
-
-        setCompra(comprasUnicas);
-        setCompras(comprasUnicas, user.id);
-        localStorage.removeItem("cart_guest");
-      }
-    }
+  const handleCantidadChange = (cantidad) => {
+    setNoCompras(cantidad);
   };
 
   useEffect(() => {
-    if (user) {
-      fusionarCarritos();
-    }
-  }, [user]);
+    setCompras(getCompras(userId));
+  }, [userId]);
 
-  // Cargar productos al seleccionar una categoría
+
+  if (user) {
+    mergeCarts(userId); // Fusionar carritos después de la autenticación
+  }
+
+  const agregarCompra = (compra) => {
+    const nuevasCompras = addCompra(compra, userId);
+    setCompras(nuevasCompras);
+    setNoCompras(nuevasCompras.reduce((acc, item) => acc + item.cantidad, 0)); // Actualizar el número de compras
+  };
+
+  useEffect(() => {
+    let newTotal = 0;
+    compra.forEach(item => {
+      newTotal += item.producto.precio_producto * item.cantidad;
+    });
+    setTotal(newTotal);
+  }, [compra]);
+
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => {
+    setOpen(false);
+    let nuevoFiltro = updateFront(filtro, userId);
+    setFiltro(nuevoFiltro);
+  };
+
   const handleCategoriaSelect = async (categoriaId) => {
     setLoading(true);
     try {
@@ -108,91 +104,66 @@ function Productos() {
     setLoading(false);
   };
 
-  // Manejar apertura y cierre del modal de carrito
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => {
-    setOpen(false);
-    let nuevoFiltro = updateFront(filtro, user?.id || "guest");
-    setFiltro(nuevoFiltro);
-  };
-
-  // Manejar apertura y cierre del diálogo de confirmación
   const handleOpenDialog = () => setOpenDialog(true);
   const handleCloseDialog = () => setOpenDialog(false);
 
-  // Borrar producto del carrito
   const handleBorrar = () => {
     eliminarProducto(productoEditado);
     setOpenDialog(false);
   };
 
-  // Cancelar eliminación de producto del carrito
   const handleCancelar = () => {
     productoEditado.cantidad = 1;
     agregarCompra(productoEditado);
     setOpenDialog(false);
   };
 
-  // Proceder al checkout
   const handleCheckout = () => {
     navigate(user ? '/checkout' : '/continua compra');
   };
 
-  // Actualizar cantidad de un producto en el carrito
+  useEffect(() => {
+    let compras = getCompras(userId);
+    setCarrito(compras.length);
+    setCompra(compras);
+    let suma = compras.reduce((acc, item) => acc + (item.cantidad * item.precio_producto), 0);
+    setTotal(suma);
+  }, [filtro, userId]);
+
   const actualizarCantidad = (objeto) => {
     setProductoEditado(objeto);
     if (objeto.cantidad <= 0) {
       setOpenDialog(true);
     } else {
-      const nuevasCompras = addCompra(objeto, user?.id || "guest");
-      setCompra(nuevasCompras);
-      let nuevoFiltro = updateFront(filtro, user?.id || "guest");
-      setFiltro(nuevoFiltro);
+      if (objeto.fuente === 'CardDetalleCarrito') {
+        let nuevaCompra = addCompra(objeto, userId);
+        setCompra(nuevaCompra);
+        let nuevoFiltro = updateFront(filtro, userId);
+        setFiltro(nuevoFiltro);
+      }
     }
   };
 
-  // Eliminar producto del carrito
   const eliminarProducto = (objeto) => {
-    const nuevasCompras = deleteCompras(objeto, user?.id || "guest");
-    setCompra(nuevasCompras);
-    let nuevoFiltro = updateFront(filtro, user?.id || "guest");
+    let nuevaCompra = deleteCompras(objeto, userId);
+    setCompra(nuevaCompra);
+    let nuevoFiltro = updateFront(filtro, userId);
     setFiltro(nuevoFiltro);
-    if (nuevasCompras.length === 0) setOpen(false);
+    if (nuevaCompra.length === 0) setOpen(false);
   };
-
-  // Agregar compra al carrito
-  const agregarCompra = (compra) => {
-    const nuevasCompras = addCompra(compra, user?.id || "guest");
-    setCompra(nuevasCompras);
-  };
-
-  // Calcular el total del carrito
-  useEffect(() => {
-    let newTotal = 0;
-    compra.forEach(item => {
-      const precio = parseFloat(item.producto.precio);
-      const cantidad = parseInt(item.cantidad, 10);
-      if (!isNaN(precio) && !isNaN(cantidad)) {
-        newTotal += precio * cantidad;
-      }
-    });
-    setTotal(newTotal);
-  }, [compra]);
 
   const ruta = "../../../../public";
 
-  console.log('Estado de compra:', compra); // Verifica el estado de compra
-
   return (
     <Box sx={{ bgcolor: "#ffffff" }}>
-      <MenuCategoria getValor={handleCategoriaSelect} noCompras={compra.length} openModal={handleOpen} />
+      <MenuCategoria getValor={handleCategoriaSelect} noCompras={noCompras} openModal={handleOpen} />
       {!loading ? (
         <CardProducto
           productos={productos}
           agregarCompra={agregarCompra}
           actualizarCantidad={actualizarCantidad}
           eliminarProducto={eliminarProducto}
-          noProductos={compra.length}
+          noProductos={noCompras}
         />
       ) : (
         <Box sx={{ width: "100%" }}>
@@ -209,7 +180,6 @@ function Productos() {
                 id={item.id}
                 titulo={item.producto.nom_producto}
                 precio={item.producto.precio_producto}
-                detalle={item.producto.detalle}
                 foto={item.producto.foto || `${ruta}/Hamburguesas.jpg`}
                 noProductos={item.cantidad}
                 monitor={actualizarCantidad}

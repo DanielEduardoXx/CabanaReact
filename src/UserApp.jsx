@@ -21,7 +21,7 @@ const UserApp = () => {
         <Route path="iniciar-sesion" element={<CardLogin />} />
         <Route path="registro" element={<CardRegistro />} />
         <Route path="perfil" element={<CardPerfil />} />
-        <Route path="continua-compra" element={<ContinuaCompra />} />
+        <Route path="continua compra" element={<ContinuaCompra />} />
         <Route path="checkout" element={<CardCheckout />} />
       </Routes>
       <Footer />

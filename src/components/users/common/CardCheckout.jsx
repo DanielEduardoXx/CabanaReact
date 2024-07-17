@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Box, Paper, TextField, Button, MenuItem, FormControl, Select, InputLabel, Typography } from "@mui/material";
 import { styled } from '@mui/material/styles';
-// import CardDetalleCarrito from "./CardDetalleCarrito";
 import CardResumenCarrito from './CardResumenCarrito';
 import { MyContext } from "../../../services/MyContext";
 import { ventasUser } from '../../../services/ventasUser';
@@ -26,23 +25,29 @@ function CardCheckout() {
 
     useEffect(() => {
         if (user) {
-            const storedCart = JSON.parse(localStorage.getItem(`cart_${user.id}`)) || [];
+            const storedCart = JSON.parse(localStorage.getItem(`cart_${user.user.id}`)) || [];
+            console.log("Carrito almacenado:", storedCart); // Depuración
             setCompra(storedCart);
 
-            const newTotal = storedCart.reduce((acc, item) => acc + item.producto.precio * item.cantidad, 0);
+            const newTotal = storedCart.reduce((acc, item) => acc + item.producto.precio_producto * item.cantidad, 0);
             setTotal(newTotal);
 
             setFormData((prevData) => ({
                 ...prevData,
                 total: newTotal,
-                user_id: user.id
+                user_id: user.user.id
             }));
+
+            console.log("Usuario en el efecto:", user);
         }
     }, [user]);
 
     useEffect(() => {
         if (user) {
-            localStorage.setItem(`cart_${user.id}`, JSON.stringify(compra));
+            if (compra.length > 0) {
+                console.log('Actualizando localStorage con compra:', compra);
+                localStorage.setItem(`cart_${user.user.id}`, JSON.stringify(compra));
+            }
         }
     }, [compra, user]);
 
@@ -55,14 +60,12 @@ function CardCheckout() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        
-        // Validar que metodo_pago no esté vacío
+
         if (!formData.metodo_pago) {
             console.error('El campo metodo_pago es obligatorio.');
             return;
         }
-        
-        // Verificar que los campos obligatorios no estén vacíos
+
         if (!formData.total || !formData.user_id) {
             console.error('Todos los campos son obligatorios.');
             return;
@@ -72,19 +75,25 @@ function CardCheckout() {
             const ventaData = {
                 ...formData,
                 total: total,
-                user_id: user.id
+                user_id: user.user.id
             };
 
-            // Imprimir los datos que se van a enviar para depuración
             console.log('Datos enviados a la API:', ventaData);
 
             const response = await ventasUser(ventaData);
             console.log('Respuesta de la API:', response);
-            // Puedes agregar lógica adicional aquí después de enviar los datos, como redirigir o mostrar un mensaje
+
+            if (response && response.success) {
+                localStorage.removeItem(`cart_${user.user.id}`);
+                setCompra([]);
+                setTotal(0);
+            }
         } catch (error) {
             console.error('Error al enviar la venta:', error.message);
         }
     };
+
+    const ruta = "../../../../public";
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem' }}>
@@ -97,7 +106,7 @@ function CardCheckout() {
                                 sx={{ margin: '5px 0', width: '100%' }}
                                 label="Nombres"
                                 variant="outlined"
-                                defaultValue={user ? user.name : ''}
+                                defaultValue={user ? user.user.name : ''}
                             />
                             <TextField
                                 disabled
@@ -105,14 +114,14 @@ function CardCheckout() {
                                 label="Telefono"
                                 type="number"
                                 variant="outlined"
-                                defaultValue={user ? user.tel : ''}
+                                defaultValue={user ? user.user.tel : ''}
                             />
                             <TextField
                                 sx={{ margin: '5px 0', width: '100%' }}
                                 label="Direccion"
                                 type="text"
                                 variant="outlined"
-                                defaultValue={user ? user.direccion : ''}
+                                defaultValue={user ? user.user.direccion : ''}
                             />
                             <TextField
                                 disabled
@@ -121,7 +130,7 @@ function CardCheckout() {
                                 label="Identificacion"
                                 type="number"
                                 variant="outlined"
-                                defaultValue={user ? user.id : ''}
+                                defaultValue={user ? user.user.id : ''}
                             />
                             <FormControl fullWidth sx={{ margin: '5px 0' }}>
                                 <InputLabel id="metodo_pago">Metodo de Pago</InputLabel>
@@ -143,9 +152,9 @@ function CardCheckout() {
                                 <CardResumenCarrito
                                     key={item.id}
                                     id={item.id}
-                                    titulo={item.producto.nombre}
-                                    precio={item.producto.precio}
-                                    foto={item.producto.foto || '/Hamburguesas.jpg'}
+                                    titulo={item.producto.nom_producto}
+                                    precio={item.producto.precio_producto}
+                                    foto={item.producto.foto || `${ruta}/Hamburguesas.jpg`}
                                     noProductos={item.cantidad}
                                 />
                             ))}

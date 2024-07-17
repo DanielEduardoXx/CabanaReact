@@ -12,14 +12,15 @@ export const MyProvider = ({ children }) => {
       return savedUser ? JSON.parse(savedUser) : null;
     } catch (error) {
       console.error("Error parsing saved user:", error);
-      return null;    
+      return null;
     }
   });
 
   useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
-      console.log(user)
+      console.log("mycontext", user)
+      console.log("mycontext", user.user.name) //Trae el name 
     } else {
       localStorage.removeItem("user");
     }

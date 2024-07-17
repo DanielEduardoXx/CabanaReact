@@ -50,7 +50,7 @@ export default function CamposLogin() {
       setCredencialesCorrectas('Haz Iniciado Sesion Correctamente');
       setLoading(false);
       setTimeout(() => {
-        navigate('/');
+        navigate('/inicio');
       }, 1000);
     } catch (error) {
       setErrorInicio(`Error: ${error.message}`);

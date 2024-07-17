@@ -48,14 +48,14 @@ function CardProducto({ productos, agregarCompra }) {
                 <Paper elevation={3} sx={{ padding: "1rem" }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box>
-                      <Typography variant="h6">{producto.nombre || producto.nom_producto}</Typography>
+                      <Typography variant="h6">{producto.nom_producto}</Typography>
                       <img
                         src={`${ruta}/Hamburguesas.jpg`}
                         alt={producto.nombre}
                         style={{ width: "100px", height: "100px" }}
                       />
                       <Typography variant="body1">
-                        Precio: {producto.precio || producto.precio_producto}
+                        Precio: {producto.precio_producto}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
