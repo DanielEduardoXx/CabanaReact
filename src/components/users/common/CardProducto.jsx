@@ -1,16 +1,21 @@
 import { Box, Paper, Typography, Grid, Button } from "@mui/material";
 import CtrlCantidad from "./CtrlCantidad";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { MyContext } from "../../../services/MyContext";
 
 function CardProducto({ productos, agregarCompra }) {
+  const { user } = useContext(MyContext);
+  const userId = user && user.user ? String(user.user.id) : "guest"; // Usa 'guest' como valor predeterminado si el usuario no está definido
+  const storageKey = `cantidades_${userId}`;
+
   const [cantidades, setCantidades] = useState(() => {
-    const savedCantidades = localStorage.getItem("cantidades");
+    const savedCantidades = localStorage.getItem(storageKey);
     return savedCantidades ? JSON.parse(savedCantidades) : {};
   });
 
   useEffect(() => {
-    localStorage.setItem("cantidades", JSON.stringify(cantidades));
-  }, [cantidades]);
+    localStorage.setItem(storageKey, JSON.stringify(cantidades));
+  }, [cantidades, storageKey]);
 
   const handleCantidadChange = (id, valor) => {
     setCantidades(prevCantidades => ({

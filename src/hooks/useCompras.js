@@ -143,8 +143,6 @@
 // export function getfiltro(productos, opcion) {
 //   return productos.filter((item) => item.idCategoria === opcion);
 // }
-
-
 export const existeProducto = (arreglo, id) => {
   return arreglo.some((item) => item.id === id);
 };

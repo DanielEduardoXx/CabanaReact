@@ -10,8 +10,6 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import LinearProgress from "@mui/material/LinearProgress";
 import Modal from "@mui/material/Modal";
-import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import PanToolIcon from '@mui/icons-material/PanTool';
 import { MyContext } from "../../services/MyContext.jsx";
 import MenuCategoria from "./common/MenuCategoria";
@@ -23,7 +21,7 @@ import { getProductos } from '../../services/productos';
 import { addCompra, getCompras, updateFront, deleteCompras, mergeCarts } from "../../hooks/useCompras";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
+  return <Slide direction="up" ref={ref} {...props}/>;
 });
 
 const style = {
@@ -62,22 +60,20 @@ function Productos() {
     setNoCompras(cantidad);
   };
 
-// Fusionar carritos de guest y user al iniciar sesión
-useEffect(() => {
-  if (user) {
-    const userId = String(user.user.id); // Asegurarse de que userId sea una cadena
-    const comprasGuest = getCompras("guest");
-    if (comprasGuest.length > 0) {
-      const comprasUsuario = getCompras(userId);
-      const nuevasCompras = mergeCarts(userId);
+  // Fusionar carritos de guest y user al iniciar sesión
+  useEffect(() => {
+    if (user) {
+      const userId = String(user.user.id); // Asegurarse de que userId sea una cadena
+      const comprasGuest = getCompras("guest");
+      if (comprasGuest.length > 0) {
+        const comprasUsuario = getCompras(userId);
+        const nuevasCompras = mergeCarts(userId);
 
-      setCompra(nuevasCompras);
-      setCompras(nuevasCompras, user.user.id);
-      // setNoCompras(nuevasCompras.reduce((acc, item) => acc + item.cantidad, 0)); // Asegúrate de actualizar el número de compras
+        setCompra(nuevasCompras);
+        setCompras(nuevasCompras, user.user.id);
+      }
     }
-  }
-}, [user]);
-
+  }, [user]);
 
   useEffect(() => {
     setCompras(getCompras(userId));
@@ -91,8 +87,12 @@ useEffect(() => {
     setTotal(newTotal);
   }, [compra]);
 
+  const handleOpen = () => {
+    const comprasActualizadas = getCompras(userId);
+    setCompra(comprasActualizadas);
+    setOpen(true);
+  };
 
-  const handleOpen = () => setOpen(true);
   const handleClose = () => {
     setOpen(false);
     let nuevoFiltro = updateFront(filtro, userId);
@@ -133,10 +133,8 @@ useEffect(() => {
     let compras = getCompras(userId);
     setCarrito(compras.length);
     setCompra(compras);
-
   }, [filtro, userId]);
 
-    // Calcular el total del carrito
   useEffect(() => {
     let newTotal = 0;
     compra.forEach(item => {
@@ -155,7 +153,6 @@ useEffect(() => {
     setNoCompras(nuevasCompras.reduce((acc, item) => acc + item.cantidad, 0)); // Actualizar el número de compras
   };
 
-    // Actualizar cantidad de un producto en el carrito
   const actualizarCantidad = (objeto) => {
     setProductoEditado(objeto);
     if (objeto.cantidad <= 0) {
@@ -167,7 +164,6 @@ useEffect(() => {
       setFiltro(nuevoFiltro);
     }
   };
-
 
   const eliminarProducto = (objeto) => {
     let nuevaCompra = deleteCompras(objeto, userId);
