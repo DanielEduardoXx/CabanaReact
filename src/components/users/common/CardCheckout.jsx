@@ -113,6 +113,7 @@ function CardCheckout() {
 
                 if (detResponse && detResponse.message === 'Registros creados exitosamente') {
                     localStorage.removeItem(`cart_${user.user.id}`);
+                    localStorage.removeItem(`cantidades_${user.user.id}`);
                     setCompra([]);
                     setTotal(0);
                     setOpen(true);  // Abrir el modal
