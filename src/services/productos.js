@@ -2,7 +2,7 @@ import axios from "axios";
 
 
 
-const  END_POINT = "http://127.0.0.1:8000/api/V1/productos"
+const  END_POINT = "http://arcaweb.test/api/V1/productos"
 
 export const getProductos = async () => {
     try {

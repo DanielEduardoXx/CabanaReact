@@ -120,4 +120,5 @@ export function mergeCarts(userId) {
   setCompras(mergedCart, String(userId)); // Asegurarse de que userId sea una cadena
   localStorage.removeItem("cart_guest"); // Limpiar el carrito de guest después de la fusión
   localStorage.removeItem("cantidades_guest"); // Limpiar el carrito de guest después de la fusión
+  // localStorage.removeItem(`cantidades_${guestItem.id}`); // Limpiar el carrito de guest después de la fusión
 }

@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const API_URL = 'http://127.0.0.1:8000/api/V1/ventas';
-const API_DET_URL = 'http://127.0.0.1:8000/api/V1/detventas';
+const API_URL = 'http://arcaweb.test/api/V1/ventas';
+const API_DET_URL = 'http://arcaweb.test/api/V1/detventas';
 
 export const ventasUser = async (ventaData) => {
     try {
