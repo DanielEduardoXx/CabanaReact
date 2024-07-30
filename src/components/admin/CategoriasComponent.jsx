@@ -40,7 +40,7 @@ const CategoriasComponent = ({ searchQuery }) => {
 
   const fetchCategoriasData = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/V1/categorias');
+      const response = await axios.get('http://arcaweb.test/api/V1/categorias');
       if (response.data && Array.isArray(response.data.data)) {
         setCategoriasData(response.data.data);
       } else {
@@ -71,7 +71,7 @@ const CategoriasComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/V1/categorias', newCategoriaData, {
+      const response = await axios.post('http://arcaweb.test/api/V1/categorias', newCategoriaData, {
         headers: { 'Content-Type': 'application/json' }
       });
 
@@ -96,7 +96,7 @@ const CategoriasComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.put(`http://127.0.0.1:8000/api/V1/categorias/${selectedCategoria.id}`, editedCategoriaData, {
+      const response = await axios.put(`http://arcaweb.test/api/V1/categorias/${selectedCategoria.id}`, editedCategoriaData, {
         headers: { 'Content-Type': 'application/json' }
       });
 
@@ -115,7 +115,7 @@ const CategoriasComponent = ({ searchQuery }) => {
     if (!selectedCategoria) return;
 
     try {
-      const response = await axios.delete(`http://127.0.0.1:8000/api/V1/categorias/${selectedCategoria.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/categorias/${selectedCategoria.id}`);
       if (response.status === 204 || response.status === 200) {
         setCategoriasData(categoriasData.filter(categoria => categoria.id !== selectedCategoria.id));
         handleCloseDeleteCategoriasDialog();

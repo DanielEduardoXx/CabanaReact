@@ -46,7 +46,7 @@ const ProductosComponent = ({ searchQuery }) => {
   // Función para obtener los datos de productos y categorías desde la API al cargar el componente
   const fetchProductosData = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/V1/productos');
+      const response = await axios.get('http://arcaweb.test/api/V1/productos');
       if (response.data && Array.isArray(response.data)) {
         setProductosData(response.data);
       } else {
@@ -59,7 +59,7 @@ const ProductosComponent = ({ searchQuery }) => {
 
   const fetchCategoriasData = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/V1/categorias');
+      const response = await axios.get('http://arcaweb.test/api/V1/categorias');
       if (response.data && Array.isArray(response.data.data)) {
         setCategoriasData(response.data.data);
       } else {
@@ -102,7 +102,7 @@ const ProductosComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/V1/productos', newProductosData, {
+      const response = await axios.post('http://arcaweb.test/api/V1/productos', newProductosData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -133,7 +133,7 @@ const ProductosComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.patch(`http://127.0.0.1:8000/api/V1/productos/${selectedProducto.id}`, editedProductosData, {
+      const response = await axios.patch(`http://arcaweb.test/api/V1/productos/${selectedProducto.id}`, editedProductosData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -153,7 +153,7 @@ const ProductosComponent = ({ searchQuery }) => {
   // Función para eliminar un producto
   const handleDeleteProducto = async () => {
     try {
-      const response = await axios.delete(`http://127.0.0.1:8000/api/V1/productos/${selectedProducto.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/productos/${selectedProducto.id}`);
       if (response.status === 204 || response.status === 200) {
         setProductosData(productosData.filter(producto => producto.id !== selectedProducto.id));
         handleCloseDeleteProductoDialog();

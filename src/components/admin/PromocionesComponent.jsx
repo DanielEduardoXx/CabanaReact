@@ -43,7 +43,7 @@ const PromocionesComponent = ({ searchQuery }) => {
   // Función para obtener los datos de las promociones desde la API al cargar el componente
   const fetchPromocionesData = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/V1/promociones');
+      const response = await axios.get('http://arcaweb.test/api/V1/promociones');
       if (response.data && Array.isArray(response.data)) {
         setPromocionesData(response.data);
       } else {
@@ -80,7 +80,7 @@ const PromocionesComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/V1/promociones', newPromocionesData, {
+      const response = await axios.post('http://arcaweb.test/api/V1/promociones', newPromocionesData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -108,7 +108,7 @@ const PromocionesComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.patch(`http://127.0.0.1:8000/api/V1/promociones/${selectedPromocion.id}`, editedPromocionesData, {
+      const response = await axios.patch(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`, editedPromocionesData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -129,7 +129,7 @@ const PromocionesComponent = ({ searchQuery }) => {
   // Función para eliminar una promoción
   const handleDeletePromocion = async () => {
     try {
-      const response = await axios.delete(`http://127.0.0.1:8000/api/V1/promociones/${selectedPromocion.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`);
       if (response.status === 204 || response.status === 200) {
         setPromocionesData(promocionesData.filter(promocion => promocion.id !== selectedPromocion.id));
         setFilteredPromocionesData(filteredPromocionesData.filter(promocion => promocion.id !== selectedPromocion.id));

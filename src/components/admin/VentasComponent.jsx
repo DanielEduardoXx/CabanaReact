@@ -41,7 +41,7 @@ const VentasComponent = ({ searchQuery }) => {
 
   const fetchVentasData = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/V1/ventas');
+      const response = await axios.get('http://arcaweb.test/api/V1/ventas');
       if (response.data && Array.isArray(response.data)) {
         setVentasData(response.data);
       } else {
@@ -54,7 +54,7 @@ const VentasComponent = ({ searchQuery }) => {
 
   const fetchDetVentaData = async (ventaId) => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/V1/detventas');
+      const response = await axios.get('http://arcaweb.test/api/V1/detventas');
       console.log('Datos de detalle de venta obtenidos de la API:', response.data);
       if (response.data && Array.isArray(response.data.data)) {
         const filteredDetVenta = response.data.data.filter(det => det.venta_id === ventaId);
@@ -91,7 +91,7 @@ const VentasComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/V1/ventas', newventaData, {
+      const response = await axios.post('http://arcaweb.test/api/V1/ventas', newventaData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -119,7 +119,7 @@ const VentasComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.put(`http://127.0.0.1:8000/api/V1/ventas/${selectedVenta.id}`, editedVentaData, {
+      const response = await axios.put(`http://arcaweb.test/api/V1/ventas/${selectedVenta.id}`, editedVentaData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -138,7 +138,7 @@ const VentasComponent = ({ searchQuery }) => {
 
   const handleDeleteVenta = async () => {
     try {
-      const response = await axios.delete(`http://127.0.0.1:8000/api/V1/ventas/${selectedVenta.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/ventas/${selectedVenta.id}`);
       if (response.status === 204 || response.status === 200) {
         setVentasData(ventasData.filter(venta => venta.id !== selectedVenta.id));
         handleCloseDeleteVentaDialog();

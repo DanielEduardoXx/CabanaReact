@@ -39,7 +39,7 @@ const Header = ({ onSearch }) => {
       position="fixed"
       sx={{
         marginLeft: '250px',
-        width: 'calc(97.90% - 250px)',
+        width: 'calc(99.99% - 250px)',
         backgroundColor: '#263491',
       }}
     >

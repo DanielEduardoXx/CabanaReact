@@ -43,7 +43,7 @@ const ClientesComponent = ({ searchQuery }) => {
   // Función para obtener los datos de los clientes desde la API al cargar el componente
   const fetchClientesData = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/V1/users');
+      const response = await axios.get('http://arcaweb.test/api/V1/users');
       if (response.data && Array.isArray(response.data)) {
         setClientesData(response.data);
       } else {
@@ -87,7 +87,7 @@ const ClientesComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/V1/users', newClienteData, {
+      const response = await axios.post('http://arcaweb.test/api/V1/users', newClienteData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -121,7 +121,7 @@ const ClientesComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.patch(`http://127.0.0.1:8000/api/V1/users/${selectedCliente.id}`, editedClienteData, {
+      const response = await axios.patch(`http://arcaweb.test/api/V1/users/${selectedCliente.id}`, editedClienteData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -144,7 +144,7 @@ const ClientesComponent = ({ searchQuery }) => {
  // Función para eliminar  un cliente
   const handleDeleteCliente = async () => {
     try {
-      const response = await axios.delete(`http://127.0.0.1:8000/api/V1/users/${selectedCliente.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/users/${selectedCliente.id}`);
      if (response.status === 204 || response.status === 200)  {
         setClientesData(clientesData.filter(cliente => cliente.id !== selectedCliente.id));
         handleCloseDeleteClientesDialog();

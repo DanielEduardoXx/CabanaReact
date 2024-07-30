@@ -42,7 +42,7 @@ const MateriaPrimaComponent = ({ searchQuery }) => {
 
   const fetchMateriaPrimaData = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/V1/matprimas');
+      const response = await axios.get('http://arcaweb.test/api/V1/matprimas');
       if (response.data && Array.isArray(response.data)) {
         setMateriaPrimaData(response.data);
       } else {
@@ -88,7 +88,7 @@ const MateriaPrimaComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/V1/matprimas', newMateriaPrimaData, {
+      const response = await axios.post('http://arcaweb.test/api/V1/matprimas', newMateriaPrimaData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -123,7 +123,7 @@ const MateriaPrimaComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.put(`http://127.0.0.1:8000/api/V1/matprimas/${selectedMateriaPrima.id}`, editedMateriaPrimaData, {
+      const response = await axios.put(`http://arcaweb.test/api/V1/matprimas/${selectedMateriaPrima.id}`, editedMateriaPrimaData, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -142,7 +142,7 @@ const MateriaPrimaComponent = ({ searchQuery }) => {
 
   const handleDeleteMateriaPrima = async () => {
     try {
-      const response = await axios.delete(`http://127.0.0.1:8000/api/V1/matprimas/${selectedMateriaPrima.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/matprimas/${selectedMateriaPrima.id}`);
       if (response.status === 204 || response.status === 200) {
         setMateriaPrimaData(materiaPrimaData.filter(materiaPrima => materiaPrima.id !== selectedMateriaPrima.id));
         handleCloseDeleteMateriaPrimaDialog();

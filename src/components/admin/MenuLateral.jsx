@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import { Box, Button, Collapse, List, ListItem } from '@mui/material';
 import axios from 'axios';
+
 // Componente principal del menú lateral
 const MenuLateral = ({ onMenuClick }) => {
   // Estados para controlar la apertura de los submenús

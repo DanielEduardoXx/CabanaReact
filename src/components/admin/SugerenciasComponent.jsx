@@ -7,6 +7,7 @@ import {
 import { Visibility, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
 
+
 const styles = {
   mainBox: {
     padding: '1rem',
@@ -40,7 +41,7 @@ const SugerenciasComponent = ({ searchQuery }) => {
 
   const fetchSugerenciasData = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/api/V1/pqrs');
+      const response = await axios.get('http://arcaweb.test/api/V1/pqrs');
       if (response.data && Array.isArray(response.data)) {
         setSugerenciasData(response.data);
       } else {
@@ -75,7 +76,7 @@ const SugerenciasComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/V1/pqrs', newSugerenciaData, {
+      const response = await axios.post('http://arcaweb.test/api/V1/pqrs', newSugerenciaData, {
         headers: { 'Content-Type': 'application/json' }
       });
 
@@ -105,7 +106,7 @@ const SugerenciasComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.patch(`http://127.0.0.1:8000/api/V1/pqrs/${selectedSugerencia.id}`, editedSugerenciaData, {
+      const response = await axios.patch(`http://arcaweb.test/api/V1/pqrs/${selectedSugerencia.id}`, editedSugerenciaData, {
         headers: { 
           'Content-Type': 'application/json' }
       });
@@ -125,7 +126,7 @@ const SugerenciasComponent = ({ searchQuery }) => {
     if (!selectedSugerencia) return;
 
     try {
-      const response = await axios.delete(`http://127.0.0.1:8000/api/V1/pqrs/${selectedSugerencia.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/pqrs/${selectedSugerencia.id}`);
       if (response.status === 204 || response.status === 200) {
         setSugerenciasData(sugerenciasData.filter(sugerencia => sugerencia.id !== selectedSugerencia.id));
         handleCloseDeleteSugerenciaDialog();
@@ -162,11 +163,11 @@ const SugerenciasComponent = ({ searchQuery }) => {
 
 
   return (
-    <Box style={styles.mainBox}>
-      <Box style={styles.subBox}>
+    <Box sx={styles.mainBox}>
+      <Box sx={styles.subBox}>
         <Typography variant="h6">Sugerencias</Typography>
       </Box>
-      <Box style={styles.subBox}>
+      <Box sx={styles.subBox}>
         <Button variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }} onClick={handleOpenNewSugerenciaModal}>
           Nuevo
         </Button>
@@ -213,7 +214,7 @@ const SugerenciasComponent = ({ searchQuery }) => {
 
 
       <Modal open={isNewSugerenciasModalOpen} onClose={handleCloseNewSugerenciaModal}>
-        <Box style={styles.modal}>
+        <Box sx={styles.modal}>
           <Typography variant="h6">Nueva Sugerencia</Typography>
           <form onSubmit={handleAddSugerencia}>
             <TextField id="sugerencia" label="Sugerencia" fullWidth margin="normal" />
@@ -251,7 +252,7 @@ const SugerenciasComponent = ({ searchQuery }) => {
 
 
       <Modal open={isEditSugerenciasModalOpen} onClose={handleCloseEditSugerenciaModal}>
-        <Box style={styles.modal}>
+        <Box sx={styles.modal}>
           <Typography variant="h6">Editar Sugerencia</Typography>
           {selectedSugerencia && (
             <form onSubmit={handleEditSugerenciaSubmit}>

@@ -42,7 +42,7 @@ const [totalVentas, setTotalVentas] = useState(0);
 // Función para obtener los datos de las ventas desde la API al cargar el componente
 const fetchVentasData = async () => {
 try {
-const response = await axios.get('http://127.0.0.1:8000/api/V1/ventas');
+const response = await axios.get('http://arcaweb.test/api/V1/ventas');
 console.log('Datos obtenidos de la API:', response.data); // Añadir log
 if (response.data && Array.isArray(response.data)) {
 setVentasData(response.data);

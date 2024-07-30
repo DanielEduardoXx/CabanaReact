@@ -11,6 +11,7 @@ import ProductosComponent from './components/admin/ProductosComponent';
 import CategoriasComponent from './components/admin/CategoriasComponent';
 import SugerenciasComponent from './components/admin/SugerenciasComponent';
 import FooterAdmin from './components/admin/FooterAdmin';
+import './index.css';
 
 const AdminApp = () => {
   const [selectedComponent, setSelectedComponent] = useState('');
@@ -26,9 +27,11 @@ const AdminApp = () => {
   };
 
   return (
-    <>
+    <div className="admin-app">
       <Header onSearch={handleSearch} />
+      <div className="main-layout">
       <MenuLateral onMenuClick={handleMenuClick} />
+      <div className="content">
       {selectedComponent === 'Clientes' && <ClientesComponent searchQuery={searchQuery} />}
       {selectedComponent === 'verificarVentas' && <VentasComponent searchQuery={searchQuery} />}
       {selectedComponent === 'Historico' && <HistoricosComponent searchQuery={searchQuery} />}
@@ -37,8 +40,10 @@ const AdminApp = () => {
       {selectedComponent === 'Productos' && <ProductosComponent searchQuery={searchQuery} />}
       {selectedComponent === 'Categorias' && <CategoriasComponent searchQuery={searchQuery} />}
       {selectedComponent === 'Sugerencias' && <SugerenciasComponent searchQuery={searchQuery} />}
+      </div>
+      </div>
       <FooterAdmin />
-    </>
+    </div>
   );
 };
 
