@@ -46,7 +46,7 @@ export default function CamposLogin() {
     try {
       const userData = await login(formData);
       setUser(userData); // Actualiza el contexto con la información del usuario
-      localStorage.setItem('user', JSON.stringify(userData)); // Guarda la información del usuario en localStorage
+      sessionStorage.setItem('user', JSON.stringify(userData)); // Guarda la información del usuario en sessionStorage
       setCredencialesCorrectas('Haz Iniciado Sesion Correctamente');
       setLoading(false);
       setTimeout(() => {
@@ -57,7 +57,7 @@ export default function CamposLogin() {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     if (loading) {
       const timer = setTimeout(() => {
