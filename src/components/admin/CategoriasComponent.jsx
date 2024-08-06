@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext} from 'react';
 import {
   Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Modal, TextField, IconButton, Dialog, DialogTitle, 
@@ -6,6 +6,9 @@ import {
 } from '@mui/material';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
+import { MyContext } from '../../services/MyContext';
+
+
 
 const styles = {
   mainBox: {
@@ -30,6 +33,7 @@ const styles = {
 };
 
 const CategoriasComponent = ({ searchQuery }) => {
+  const { user } = useContext(MyContext);
   const [categoriasData, setCategoriasData] = useState([]);
   const [filteredCategoriasData, setFilteredCategoriasData] = useState([]);
   const [isNewCategoriasModalOpen, setIsNewCategoriasModalOpen] = useState(false);
@@ -40,7 +44,9 @@ const CategoriasComponent = ({ searchQuery }) => {
 
   const fetchCategoriasData = async () => {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/categorias');
+      const response = await axios.get('http://arcaweb.test/api/V1/categorias', {
+        headers: { 'Authorization': `Bearer ${user?.accessToken}` }
+      });
       if (response.data && Array.isArray(response.data.data)) {
         setCategoriasData(response.data.data);
       } else {
@@ -51,9 +57,11 @@ const CategoriasComponent = ({ searchQuery }) => {
     }
   };
 
+  
+
   useEffect(() => {
     fetchCategoriasData();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     setFilteredCategoriasData(
@@ -72,7 +80,10 @@ const CategoriasComponent = ({ searchQuery }) => {
 
     try {
       const response = await axios.post('http://arcaweb.test/api/V1/categorias', newCategoriaData, {
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.accessToken}`
+          }
       });
 
       if (response.status === 201) {
@@ -97,7 +108,9 @@ const CategoriasComponent = ({ searchQuery }) => {
 
     try {
       const response = await axios.put(`http://arcaweb.test/api/V1/categorias/${selectedCategoria.id}`, editedCategoriaData, {
-        headers: { 'Content-Type': 'application/json' }
+        headers: {  'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${user?.accessToken}`
+         }
       });
 
       if (response.status === 200) {
@@ -115,7 +128,10 @@ const CategoriasComponent = ({ searchQuery }) => {
     if (!selectedCategoria) return;
 
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/categorias/${selectedCategoria.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/categorias/${selectedCategoria.id}`, {
+        headers: { 'Authorization': `Bearer ${user?.accessToken}` }
+      });
+
       if (response.status === 204 || response.status === 200) {
         setCategoriasData(categoriasData.filter(categoria => categoria.id !== selectedCategoria.id));
         handleCloseDeleteCategoriasDialog();
@@ -188,7 +204,7 @@ const CategoriasComponent = ({ searchQuery }) => {
             {filteredCategoriasData.map((categoria, id) => (
               <TableRow key={id}>
                 <TableCell>{categoria.id}</TableCell>
-                <TableCell>{categoria.nombre_cat}</TableCell>
+                <TableCell>{categoria.nombre}</TableCell>
                 <TableCell>
                   <IconButton onClick={() => handleViewCategoria(categoria)}>
                     <Visibility />

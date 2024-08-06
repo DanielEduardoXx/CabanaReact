@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext} from 'react';
 import {
   Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Modal, TextField, IconButton, Dialog, DialogTitle,
@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
+import { MyContext } from '../../services/MyContext';
 
 const styles = {
   mainBox: {
@@ -31,7 +32,9 @@ const styles = {
   },
 };
 
-const ClientesComponent = ({ searchQuery }) => {
+
+  const ClientesComponent = ({ searchQuery }) => {
+  const { user } = useContext(MyContext);
   const [clientesData, setClientesData] = useState([]); // Estado para almacenar todos los clientes
   const [filteredClientesData, setFilteredClientesData] = useState([]); // Estado para almacenar clientes filtrados
   const [isNewClientesModalOpen, setIsNewClientesModalOpen] = useState(false); // Estado para controlar la apertura/cierre del modal de nuevo cliente
@@ -39,25 +42,40 @@ const ClientesComponent = ({ searchQuery }) => {
   const [isEditClientesModalOpen, setIsEditClientesModalOpen] = useState(false); // Estado para controlar la apertura/cierre del modal de edición de cliente
   const [isDeleteClientesDialogOpen, setIsDeleteClientesDialogOpen] = useState(false); // Estado para controlar la apertura/cierre del diálogo de eliminación
   const [selectedCliente, setSelectedCliente] = useState(null); // Estado para almacenar el cliente seleccionado para editar, ver o eliminar
-
+  console.log( clientesData);
+  const userSession=JSON.parse(sessionStorage.getItem('user'));
+  console.log( "userSession ",userSession);
+  const token = userSession?.token?.access_token;
+  console.log("hola ",token);
   // Función para obtener los datos de los clientes desde la API al cargar el componente
   const fetchClientesData = async () => {
-    try {
-      const response = await axios.get('http://arcaweb.test/api/V1/users');
-      if (response.data && Array.isArray(response.data)) {
-        setClientesData(response.data);
-      } else {
-        console.error('Datos de clientes no válidos:', response.data);
+    if (user) {
+      try {
+        const response = await axios.get('http://arcaweb.test/api/V1/users', {
+          headers: { 'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json' }
+        });
+        if (response.data && Array.isArray(response.data)) {
+          setClientesData(response.data);
+        } else {
+          console.error('Datos de clientes no válidos:', response.data);
+        }
+      } catch (error) {
+        console.error('Error al obtener datos de clientes:', error);
       }
-    } catch (error) {
-      console.error('Error al obtener datos de clientes:', error);
+    } else {
+      console.error("Access token no disponible");
     }
   };
+
+
   useEffect(() => {
-
-    fetchClientesData();
-  }, []);
-
+    if (token) {
+      fetchClientesData();
+    } else {
+      console.error("Access token no disponible");
+    }
+  }, [user]);
   // Función para filtrar los clientes según la búsqueda
   useEffect(() => {
     setFilteredClientesData(
@@ -89,7 +107,9 @@ const ClientesComponent = ({ searchQuery }) => {
     try {
       const response = await axios.post('http://arcaweb.test/api/V1/users', newClienteData, {
         headers: {
+           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
+          
         }
       });
 
@@ -123,6 +143,8 @@ const ClientesComponent = ({ searchQuery }) => {
     try {
       const response = await axios.patch(`http://arcaweb.test/api/V1/users/${selectedCliente.id}`, editedClienteData, {
         headers: {
+          
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -144,7 +166,11 @@ const ClientesComponent = ({ searchQuery }) => {
  // Función para eliminar  un cliente
   const handleDeleteCliente = async () => {
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/users/${selectedCliente.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/clientes/${selectedCliente.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+       
+      });
+      console.log(token);
      if (response.status === 204 || response.status === 200)  {
         setClientesData(clientesData.filter(cliente => cliente.id !== selectedCliente.id));
         handleCloseDeleteClientesDialog();
