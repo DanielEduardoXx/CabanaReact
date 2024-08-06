@@ -1,11 +1,21 @@
-import axios from "axios";
+import axios from 'axios';
 
 const API_URL = 'http://arcaweb.test/api/V1/ventas';
 const API_DET_URL = 'http://arcaweb.test/api/V1/detventas';
 
+const userSession = JSON.parse(sessionStorage.getItem('user'));
+
+console.log("Hola userSession", userSession); 
+const token = userSession?.token?.access_token; // Asegúrate de que la estructura coincide con el almacenamiento
+console.log("Hola", token); 
 export const ventasUser = async (ventaData) => {
     try {
-        const response = await axios.post(API_URL, ventaData);
+        const response = await axios.post(API_URL, ventaData, {
+            headers: {
+                'Authorization': `Bearer ${token}`,  // Incluye el token en las cabeceras
+                'Content-Type': 'application/json',
+            }
+        });
         if (response.status === 201) {
             console.log('Venta creada correctamente');
             return response.data;
@@ -25,7 +35,12 @@ export const ventasUser = async (ventaData) => {
 
 export const detVentasUser = async (detVentaData) => {
     try {
-        const response = await axios.post(API_DET_URL, detVentaData);
+        const response = await axios.post(API_DET_URL, detVentaData, {
+            headers: {
+                'Authorization': `Bearer ${token}`,  // Incluye el token en las cabeceras
+                'Content-Type': 'application/json',
+            }
+        });
         if (response.status === 200 || response.status === 201) {
             console.log('Detalle de venta creado correctamente');
             return response.data;

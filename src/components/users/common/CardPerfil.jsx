@@ -46,7 +46,7 @@ const Perfil = () => {
             });
         }
     }, [user]);
-    console.log(user)
+    console.log("user: ",user)
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -63,7 +63,7 @@ const Perfil = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const userId = user?.id;
+            const userId = user.user.id;
             if (!userId) {
                 throw new Error("User ID is undefined");
             }

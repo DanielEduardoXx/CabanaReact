@@ -7,7 +7,7 @@ export const MyContext = createContext({
   setUser: () => {},
 });
 
-const INACTIVITY_TIMEOUT = 5000; // 1 minuto de inactividad
+const INACTIVITY_TIMEOUT = 300000; // 1 minuto de inactividad
 
 export const MyProvider = ({ children }) => {
   const navigate = useNavigate();
