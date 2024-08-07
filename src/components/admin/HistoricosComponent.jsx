@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext} from 'react';
 import axios from 'axios';
 import {
 Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
-TableHead, TableRow, Modal, TextField, IconButton
-} from '@mui/material';
+TableHead, TableRow, Modal, TextField, IconButton} from '@mui/material';
 import { Visibility } from '@mui/icons-material';
+import { MyContext } from '../../services/MyContext';
 
 // Estilos para el componente
 const styles = {
@@ -31,6 +31,7 @@ boxShadow: 24,
 
 // Componente principal
 const HistoricosComponent = ({ searchQuery }) => {
+const { user } = useContext(MyContext);
 const [ventasData, setVentasData] = useState([]);
 const [filteredVentasData, setFilteredVentasData] = useState([]);
 const [isViewVentasModalOpen, setIsViewVentasModalOpen] = useState(false);
@@ -39,19 +40,31 @@ const [startDate, setStartDate] = useState('');
 const [endDate, setEndDate] = useState('');
 const [totalVentas, setTotalVentas] = useState(0);
 
+console.log( ventasData);
+const userSession=JSON.parse(sessionStorage.getItem('user'));
+console.log( "userSession ",userSession);
+const token = userSession?.token?.access_token;
+console.log("hola ",token);
+
 // Función para obtener los datos de las ventas desde la API al cargar el componente
 const fetchVentasData = async () => {
-try {
-const response = await axios.get('http://arcaweb.test/api/V1/ventas');
-console.log('Datos obtenidos de la API:', response.data); // Añadir log
-if (response.data && Array.isArray(response.data)) {
-setVentasData(response.data);
-} else {
-console.error('Datos de ventas no válidos:', response.data);
-}
-} catch (error) {
-console.error('Error al obtener datos de ventas:', error);
-}
+  if (user) {
+    try {
+      const response = await axios.get('http://arcaweb.test/api/V1/ventas', {
+        headers: { 'Authorization': `Bearer ${token}`}
+      });
+      if (response.status === 200) {
+        setVentasData(response.data.data);
+      //  console.log(response.data);
+      } else {
+        console.error('Datos de clientes no válidos:', response.data.data);
+      }
+    } catch (error) {
+      console.error('Error al obtener datos de clientes:', error);
+    }
+  } else {
+    console.error("Access token no disponible");
+  }
 };
 
 useEffect(() => {
