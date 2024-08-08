@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import {
   Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
@@ -6,6 +6,7 @@ import {
   DialogContent, DialogContentText, DialogActions
 } from '@mui/material';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
+import { MyContext } from '../../services/MyContext';
 
 // Estilos para el componente
 const styles = {
@@ -31,7 +32,8 @@ const styles = {
 };
 
 // Componente principal
-const ProductosComponent = ({ searchQuery }) => {
+  const ProductosComponent = ({ searchQuery }) => {
+  const { user } = useContext(MyContext);
   const [productosData, setProductosData] = useState([]);
   const [categoriasData, setCategoriasData] = useState([]);
   const [filteredProductosData, setFilteredProductosData] = useState([]);
@@ -43,39 +45,63 @@ const ProductosComponent = ({ searchQuery }) => {
   const [selectedProducto, setSelectedProducto] = useState(null);
   const [selectedCategoria, setSelectedCategoria] = useState(null);
 
-  // Función para obtener los datos de productos y categorías desde la API al cargar el componente
+  
+  const userSession=JSON.parse(sessionStorage.getItem('user'));
+  console.log( "userSession ",userSession);
+  const token = userSession?.token?.access_token;
+  console.log("hola ",token);
+
+  // Función para obtener los datos de productos  desde la API 
   const fetchProductosData = async () => {
-    try {
-      const response = await axios.get('http://arcaweb.test/api/V1/productos');
-      if (response.data && Array.isArray(response.data)) {
-        setProductosData(response.data);
+    if (user) {
+      try {
+        const response = await axios.get('http://arcaweb.test/api/V1/productos', {
+          headers: { 'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json' 
+        }
+        });
+      if (response.status === 200) {
+        setProductosData(response.data.data);
       } else {
-        console.error('Datos de Productos no válidos:', response.data);
+        console.error('Datos de productos no válidos:', response.data.data);
       }
     } catch (error) {
       console.error('Error al obtener datos de productos:', error);
     }
-  };
+  } else {
+    console.error("Access token no disponible");
+  }
+};
 
-  const fetchCategoriasData = async () => {
+// Función para obtener los datos de categorías desde la API
+const fetchCategoriasData = async () => {
+    if (user) {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/categorias');
-      if (response.data && Array.isArray(response.data.data)) {
-        setCategoriasData(response.data.data);
+      const response = await axios.get('http://arcaweb.test/api/V1/categorias', {
+        headers: { 'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
+      }
+      });
+
+      if (response.status === 200) {
+        setCategoriasData(Array.isArray(response.data.data) ? response.data.data : []);
       } else {
-        console.error('Datos de categorías no válidos:', response.data);
+        console.error('Datos de categorias no válidos:', response.data.data);
       }
     } catch (error) {
       console.error('Error al obtener datos de categorías:', error);
     }
-  };
+  } else {
+    console.error("Access token no disponible");
+  }
+};
 
   useEffect(() => {
     fetchProductosData();
     fetchCategoriasData();
   }, []);
 
-  // Función para filtrar los productos según la búsqueda
+  //  filtrar los productos según la búsqueda
   useEffect(() => {
     setFilteredProductosData(
       productosData.filter(producto =>
@@ -103,9 +129,10 @@ const ProductosComponent = ({ searchQuery }) => {
 
     try {
       const response = await axios.post('http://arcaweb.test/api/V1/productos', newProductosData, {
-        headers: {
+        
+          headers: { 'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+         }
       });
 
       if (response.status === 201) {
@@ -134,8 +161,8 @@ const ProductosComponent = ({ searchQuery }) => {
 
     try {
       const response = await axios.patch(`http://arcaweb.test/api/V1/productos/${selectedProducto.id}`, editedProductosData, {
-        headers: {
-          'Content-Type': 'application/json'
+        headers: { 'Authorization': `Bearer ${token}`,
+                   'Content-Type': 'application/json'
         }
       });
 
@@ -143,7 +170,7 @@ const ProductosComponent = ({ searchQuery }) => {
         setProductosData(productosData.map(producto => producto.id === editedProductosData.id ? response.data : producto));
         handleCloseEditProductoModal();
       } else {
-        console.error('Error al editar cliente:', response.data);
+        console.error('Error al editar cliente:', response.data.data);
       }
     } catch (error) {
       console.error('Error al editar cliente:', error.response ? error.response.data : error.message);
@@ -153,7 +180,11 @@ const ProductosComponent = ({ searchQuery }) => {
   // Función para eliminar un producto
   const handleDeleteProducto = async () => {
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/productos/${selectedProducto.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/productos/${selectedProducto.id}`, {
+        headers: { 'Authorization': `Bearer ${token}`,
+         }
+      });
+
       if (response.status === 204 || response.status === 200) {
         setProductosData(productosData.filter(producto => producto.id !== selectedProducto.id));
         handleCloseDeleteProductoDialog();

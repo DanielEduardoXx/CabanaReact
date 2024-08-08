@@ -42,20 +42,32 @@ const CategoriasComponent = ({ searchQuery }) => {
   const [isDeleteCategoriasDialogOpen, setIsDeleteCategoriasDialogOpen] = useState(false);
   const [selectedCategoria, setSelectedCategoria] = useState(null);
 
+  console.log(categoriasData);
+  const userSession=JSON.parse(sessionStorage.getItem('user'));
+  console.log( "userSession ",userSession);
+  const token = userSession?.token?.access_token;
+  console.log("hola ",token);
+
   const fetchCategoriasData = async () => {
+    if (user) {
     try {
       const response = await axios.get('http://arcaweb.test/api/V1/categorias', {
-        headers: { 'Authorization': `Bearer ${user?.accessToken}` }
+        headers: { 'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
+      }
       });
-      if (response.data && Array.isArray(response.data.data)) {
+      if (response.status === 200) {
         setCategoriasData(response.data.data);
       } else {
-        console.error('Datos de categorías no válidos:', response.data);
+        console.error('Datos de categorias no válidos:', response.data.data);
       }
     } catch (error) {
-      console.error('Error al obtener datos de categorías:', error);
+      console.error('Error al obtener datos de categorias:', error);
     }
-  };
+  } else {
+    console.error("Access token no disponible");
+  }
+};
 
   
 
@@ -80,10 +92,8 @@ const CategoriasComponent = ({ searchQuery }) => {
 
     try {
       const response = await axios.post('http://arcaweb.test/api/V1/categorias', newCategoriaData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.accessToken}`
-          }
+        headers: { 'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' }
       });
 
       if (response.status === 201) {
@@ -108,9 +118,8 @@ const CategoriasComponent = ({ searchQuery }) => {
 
     try {
       const response = await axios.put(`http://arcaweb.test/api/V1/categorias/${selectedCategoria.id}`, editedCategoriaData, {
-        headers: {  'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${user?.accessToken}`
-         }
+        headers: { 'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' }
       });
 
       if (response.status === 200) {
@@ -129,7 +138,8 @@ const CategoriasComponent = ({ searchQuery }) => {
 
     try {
       const response = await axios.delete(`http://arcaweb.test/api/V1/categorias/${selectedCategoria.id}`, {
-        headers: { 'Authorization': `Bearer ${user?.accessToken}` }
+        headers: { 'Authorization': `Bearer ${token}`,
+         }
       });
 
       if (response.status === 204 || response.status === 200) {
@@ -242,7 +252,7 @@ const CategoriasComponent = ({ searchQuery }) => {
           <Typography variant="h6">Visualizar Categoria</Typography>
           {selectedCategoria && (
             <>
-              <Typography>Nombre: {selectedCategoria.nombre_cat}</Typography>
+              <Typography>Nombre: {selectedCategoria.nombre}</Typography>
               <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
                 <Button onClick={handleCloseViewCategoriaModal} sx={{ marginRight: 1 }}>Cerrar</Button>
               </Box>

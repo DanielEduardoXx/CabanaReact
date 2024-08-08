@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect ,useContext} from 'react';
 import axios from 'axios';
 import {
   Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
@@ -6,6 +6,7 @@ import {
   DialogContentText, DialogActions
 } from '@mui/material';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
+import { MyContext } from '../../services/MyContext';
 
 // Estilos para el componente
 const styles = {
@@ -31,7 +32,8 @@ const styles = {
 };
 
 // Componente principal
-const PromocionesComponent = ({ searchQuery }) => {
+  const PromocionesComponent = ({ searchQuery }) => {
+  const { user } = useContext(MyContext);
   const [promocionesData, setPromocionesData] = useState([]);
   const [filteredPromocionesData, setFilteredPromocionesData] = useState([]);
   const [isNewPromocionModalOpen, setIsNewPromocionModalOpen] = useState(false);
@@ -40,19 +42,32 @@ const PromocionesComponent = ({ searchQuery }) => {
   const [isDeletePromocionesDialogOpen, setIsDeletePromocionDialogOpen] = useState(false);
   const [selectedPromocion, setSelectedPromocion] = useState(null);
 
+  const userSession=JSON.parse(sessionStorage.getItem('user'));
+  console.log( "userSession ",userSession);
+  const token = userSession?.token?.access_token;
+  console.log("hola ",token);
+
   // Función para obtener los datos de las promociones desde la API al cargar el componente
   const fetchPromocionesData = async () => {
-    try {
-      const response = await axios.get('http://arcaweb.test/api/V1/promociones');
-      if (response.data && Array.isArray(response.data)) {
-        setPromocionesData(response.data);
+    if (user) {
+      try {
+        const response = await axios.get('http://arcaweb.test/api/V1/promociones', {
+          headers: { 'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json' 
+        }
+        });
+      if (response.status === 200) {
+        setPromocionesData(response.data.data);
       } else {
-        console.error('Datos de promociones no válidos:', response.data);
+        console.error('Datos de categorias no válidos:', response.data.data);
       }
     } catch (error) {
-      console.error('Error al obtener datos de promociones:', error);
+      console.error('Error al obtener datos de categorias:', error);
     }
-  };
+  } else {
+    console.error("Access token no disponible");
+  }
+};
 
   useEffect(() => {
     fetchPromocionesData();
@@ -80,10 +95,10 @@ const PromocionesComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.post('http://arcaweb.test/api/V1/promociones', newPromocionesData, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      const response = await axios.post('http://arcaweb.test/api/V1/promociones', newPromocionesData,{
+        headers: { 'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
+      }
       });
 
       if (response.status === 201) {
@@ -108,10 +123,10 @@ const PromocionesComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.patch(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`, editedPromocionesData, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      const response = await axios.patch(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`, editedPromocionesData,{
+        headers: { 'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
+      }
       });
 
       if (response.status === 200) {
@@ -129,7 +144,10 @@ const PromocionesComponent = ({ searchQuery }) => {
   // Función para eliminar una promoción
   const handleDeletePromocion = async () => {
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`, {
+        headers: { 'Authorization': `Bearer ${token}`  
+      }
+      });
       if (response.status === 204 || response.status === 200) {
         setPromocionesData(promocionesData.filter(promocion => promocion.id !== selectedPromocion.id));
         setFilteredPromocionesData(filteredPromocionesData.filter(promocion => promocion.id !== selectedPromocion.id));
@@ -207,7 +225,7 @@ const PromocionesComponent = ({ searchQuery }) => {
               <TableCell>ID Promoción</TableCell>
               <TableCell>Nombre Promoción</TableCell>
               <TableCell>Total</TableCell>
-              <TableCell>Id Categoria</TableCell>
+             
               <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
@@ -217,7 +235,7 @@ const PromocionesComponent = ({ searchQuery }) => {
                 <TableCell>{promocion.id}</TableCell>
                 <TableCell>{promocion.nom_promo}</TableCell>
                 <TableCell>{promocion.total_promo}</TableCell>
-                <TableCell>{promocion.categoria_id}</TableCell>
+                
                 <TableCell>
                   <IconButton onClick={() => handleViewPromocion(promocion)}>
                     <Visibility />

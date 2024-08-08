@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import {
   Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
@@ -6,6 +6,7 @@ import {
   DialogContentText, DialogActions
 } from '@mui/material';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
+import { MyContext } from '../../services/MyContext';
 
 const styles = {
   mainBox: {
@@ -30,6 +31,7 @@ const styles = {
 };
 
 const MateriaPrimaComponent = ({ searchQuery }) => {
+  const { user } = useContext(MyContext);
   const [materiaPrimaData, setMateriaPrimaData] = useState([]);
   const [filteredMateriaPrimaData, setFilteredMateriaPrimaData] = useState([]);
   const [isNewMateriaPrimaModalOpen, setIsNewMateriaPrimaModalOpen] = useState(false);
@@ -40,19 +42,32 @@ const MateriaPrimaComponent = ({ searchQuery }) => {
   const [entrada, setEntrada] = useState(0);
   const [salida, setSalida] = useState(0);
 
+  console.log( materiaPrimaData);
+  const userSession=JSON.parse(sessionStorage.getItem('user'));
+  console.log( "userSession ",userSession);
+  const token = userSession?.token?.access_token;
+  console.log("hola ",token);
+
   const fetchMateriaPrimaData = async () => {
+    if (user) {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/matprimas');
-      if (response.data && Array.isArray(response.data)) {
-        setMateriaPrimaData(response.data);
+      const response = await axios.get('http://arcaweb.test/api/V1/matprimas', {
+        headers: { 'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
+      }
+    });
+      if (response.status === 200) {
+        setMateriaPrimaData(response.data.data);
       } else {
-        console.error('Datos de clientes no válidos:', response.data);
+        console.error('Datos de clientes no válidos:', response.data.data);
       }
     } catch (error) {
       console.error('Error al obtener datos de clientes:', error);
     }
-  };
-
+  } else {
+    console.error("Access token no disponible");
+  }
+};
   useEffect(() => {
     fetchMateriaPrimaData();
   }, []);
@@ -89,8 +104,8 @@ const MateriaPrimaComponent = ({ searchQuery }) => {
 
     try {
       const response = await axios.post('http://arcaweb.test/api/V1/matprimas', newMateriaPrimaData, {
-        headers: {
-          'Content-Type': 'application/json'
+        headers: { 'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
         }
       });
 
@@ -124,8 +139,8 @@ const MateriaPrimaComponent = ({ searchQuery }) => {
 
     try {
       const response = await axios.put(`http://arcaweb.test/api/V1/matprimas/${selectedMateriaPrima.id}`, editedMateriaPrimaData, {
-        headers: {
-          'Content-Type': 'application/json'
+        headers: { 'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
         }
       });
 
@@ -142,7 +157,10 @@ const MateriaPrimaComponent = ({ searchQuery }) => {
 
   const handleDeleteMateriaPrima = async () => {
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/matprimas/${selectedMateriaPrima.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/matprimas/${selectedMateriaPrima.id}`, {
+        headers: { 'Authorization': `Bearer ${token}`,
+         }
+      });
       if (response.status === 204 || response.status === 200) {
         setMateriaPrimaData(materiaPrimaData.filter(materiaPrima => materiaPrima.id !== selectedMateriaPrima.id));
         handleCloseDeleteMateriaPrimaDialog();

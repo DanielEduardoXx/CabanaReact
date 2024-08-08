@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Modal, TextField, IconButton, Dialog, DialogTitle, 
@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
+import { MyContext } from '../../services/MyContext';
 
 
 const styles = {
@@ -30,7 +31,8 @@ const styles = {
   },
 };
 
-const SugerenciasComponent = ({ searchQuery }) => {
+  const SugerenciasComponent = ({ searchQuery }) => {
+  const { user } = useContext(MyContext);
   const [sugerenciasData, setSugerenciasData] = useState([]);
   const [filteredSugerenciasData, setFilteredSugerenciasData] = useState([]);
   const [isNewSugerenciasModalOpen, setIsNewSugerenciasModalOpen] = useState(false);
@@ -39,18 +41,31 @@ const SugerenciasComponent = ({ searchQuery }) => {
   const [isDeleteSugerenciasDialogOpen, setIsDeleteSugerenciasDialogOpen] = useState(false);
   const [selectedSugerencia, setSelectedSugerencia] = useState(null);
 
+  const userSession=JSON.parse(sessionStorage.getItem('user'));
+  console.log( "userSession ",userSession);
+  const token = userSession?.token?.access_token;
+  console.log("hola ",token);
+
   const fetchSugerenciasData = async () => {
+    if (user) {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/pqrs');
-      if (response.data && Array.isArray(response.data)) {
-        setSugerenciasData(response.data);
+      const response = await axios.get('http://arcaweb.test/api/V1/pqrs', {
+        headers: { 'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
+      }
+      });
+      if (response.status === 200) {
+        setSugerenciasData(response.data.data);
       } else {
-        console.error('Datos de sugerencias no válidos:', response.data);
+        console.error('Datos de sugerencias no válidos:', response.data.data);
       }
     } catch (error) {
       console.error('Error al obtener datos de sugerencias:', error);
     }
-  };
+  } else {
+    console.error("Access token no disponible");
+  }
+};
 
   useEffect(() => {
     fetchSugerenciasData();
@@ -77,7 +92,10 @@ const SugerenciasComponent = ({ searchQuery }) => {
 
     try {
       const response = await axios.post('http://arcaweb.test/api/V1/pqrs', newSugerenciaData, {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'  
+        }
       });
 
       if (response.status === 201) {
@@ -108,11 +126,13 @@ const SugerenciasComponent = ({ searchQuery }) => {
     try {
       const response = await axios.patch(`http://arcaweb.test/api/V1/pqrs/${selectedSugerencia.id}`, editedSugerenciaData, {
         headers: { 
-          'Content-Type': 'application/json' }
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'  
+        }
       });
 
       if (response.status === 200) {
-        setSugerenciasData(sugerenciasData.map(sugerencia => sugerencia.id === editedSugerenciaData.id ? response.data : sugerencia));
+        setSugerenciasData(sugerenciasData.map(sugerencia => sugerencia.id === editedSugerenciaData.id ? response.data.data : sugerencia));
         handleCloseEditSugerenciaModal();
       } else {
         console.error('Error al editar la Sugerencia:', response.data);
@@ -126,7 +146,11 @@ const SugerenciasComponent = ({ searchQuery }) => {
     if (!selectedSugerencia) return;
 
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/pqrs/${selectedSugerencia.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/pqrs/${selectedSugerencia.id}`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`           
+        }
+      });
       if (response.status === 204 || response.status === 200) {
         setSugerenciasData(sugerenciasData.filter(sugerencia => sugerencia.id !== selectedSugerencia.id));
         handleCloseDeleteSugerenciaDialog();
