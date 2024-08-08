@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext} from 'react';
 import axios from 'axios';
 import {
   Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
@@ -6,6 +6,7 @@ import {
   DialogContentText, DialogActions
 } from '@mui/material';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
+import { MyContext } from '../../services/MyContext';
 
 const styles = {
   mainBox: {
@@ -30,6 +31,7 @@ const styles = {
 };
 
 const VentasComponent = ({ searchQuery }) => {
+  const { user } = useContext(MyContext);
   const [ventasData, setVentasData] = useState([]);
   const [filteredVentasData, setFilteredVentasData] = useState([]);
   const [isNewVentasModalOpen, setIsNewVentasModalOpen] = useState(false);
@@ -39,24 +41,42 @@ const VentasComponent = ({ searchQuery }) => {
   const [selectedVenta, setSelectedVenta] = useState(null);
   const [detVenta, setDetVenta] = useState(null);
 
+  const userSession=JSON.parse(sessionStorage.getItem('user'));
+  console.log( "userSession ",userSession);
+  const token = userSession?.token?.access_token;
+  console.log("hola ",token);
+
   const fetchVentasData = async () => {
+    if (user) {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/ventas');
-      if (response.data && Array.isArray(response.data)) {
-        setVentasData(response.data);
+      const response = await axios.get('http://arcaweb.test/api/V1/ventas', {
+        headers: { 'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
+      }
+      });
+      if (response.status === 200) {
+        setVentasData(response.data.data);
       } else {
-        console.error('Datos de ventas no válidos:', response.data);
+        console.error('Datos de ventas no válidos:', response.data.data);
       }
     } catch (error) {
       console.error('Error al obtener datos de ventas:', error);
     }
-  };
+  } else {
+    console.error("Access token no disponible");
+  }
+};
 
   const fetchDetVentaData = async (ventaId) => {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/detventas');
+      const response = await axios.get('http://arcaweb.test/api/V1/detventas', {
+        headers: { 'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json' 
+      }
+      });
       console.log('Datos de detalle de venta obtenidos de la API:', response.data);
-      if (response.data && Array.isArray(response.data.data)) {
+
+      if (response.status === 200) {
         const filteredDetVenta = response.data.data.filter(det => det.venta_id === ventaId);
         setDetVenta(filteredDetVenta);
       } else {
@@ -93,7 +113,8 @@ const VentasComponent = ({ searchQuery }) => {
     try {
       const response = await axios.post('http://arcaweb.test/api/V1/ventas', newventaData, {
         headers: {
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json' 
         }
       });
 
@@ -121,7 +142,8 @@ const VentasComponent = ({ searchQuery }) => {
     try {
       const response = await axios.put(`http://arcaweb.test/api/V1/ventas/${selectedVenta.id}`, editedVentaData, {
         headers: {
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json' 
         }
       });
 
@@ -138,7 +160,12 @@ const VentasComponent = ({ searchQuery }) => {
 
   const handleDeleteVenta = async () => {
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/ventas/${selectedVenta.id}`);
+      const response = await axios.delete(`http://arcaweb.test/api/V1/ventas/${selectedVenta.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`    
+        }
+      });
+
       if (response.status === 204 || response.status === 200) {
         setVentasData(ventasData.filter(venta => venta.id !== selectedVenta.id));
         handleCloseDeleteVentaDialog();
