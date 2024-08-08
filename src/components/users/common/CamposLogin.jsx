@@ -44,9 +44,9 @@ export default function CamposLogin() {
     event.preventDefault();
     setLoading(true);
     try {
-      const data = await login(formData, setUser);
-      setUser(data.user);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      const userData = await login(formData);
+      setUser(userData); // Actualiza el contexto con la información del usuario
+      sessionStorage.setItem('user', JSON.stringify(userData)); // Guarda la información del usuario en sessionStorage
       setCredencialesCorrectas('Haz Iniciado Sesion Correctamente');
       setLoading(false);
       setTimeout(() => {
@@ -57,7 +57,7 @@ export default function CamposLogin() {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     if (loading) {
       const timer = setTimeout(() => {
@@ -81,6 +81,7 @@ export default function CamposLogin() {
       const timer = setTimeout(() => {
         setErrorInicio('');
       }, 3000);
+      return () => clearTimeout(timer);
     }
   }, [errorInicio]);
 
@@ -120,7 +121,7 @@ export default function CamposLogin() {
             }}
             id="email"
             label="Email"
-            type= "email"
+            type="email"
             variant="outlined"
             value={formData.email}
             onChange={handleChange}

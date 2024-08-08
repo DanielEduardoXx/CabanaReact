@@ -6,7 +6,6 @@ import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CtrlCantidad from "./CtrlCantidad";
-import CardProducto from "./CardProducto";
 
 function CardDetalleCarrito({
   id,
@@ -63,7 +62,7 @@ function CardDetalleCarrito({
           />
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={2}>
           <Typography fontSize={18} textAlign="justify">
             {titulo}
           </Typography>
@@ -75,7 +74,7 @@ function CardDetalleCarrito({
           </Typography>
         </Grid>
 
-        <Grid item xs={12} md={2}>
+        <Grid item xs={12} md={3}>
           <CtrlCantidad noProductos={cantidad} getCantidad={getCantidad} borrar={getBorrar} />
         </Grid>
 

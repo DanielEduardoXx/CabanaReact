@@ -1,51 +1,27 @@
-import './App.css'
-
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-
-//import { useUsuarios } from "./hooks/useUsuarios.js";
-
-import Inicio from "./components/users/Inicio"
-import MenuLink from './components/users/MenuLink'
-import Productos from './components/users/Productos'
-import CardLogin from './components/users/common/CardLogin'
-import CardRegistro from './components/users/common/CardRegistro'
-import CardPerfil from './components/users/common/CardPerfil'
-import ContinuaCompra from './components/users/common/ContinuaCompra'
-import CardCheckout from './components/users/common/CardCheckout';
+// App.jsx
+import React, { useContext } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { MyContext, MyProvider } from './services/MyContext.jsx';
-import Footer from './components/users/Footer.jsx';
-
-import { useState } from 'react';
-
+import CamposLogin from './components/users/common/CamposLogin';
+import UserApp from './UserApp';
+import AdminApp from './AdminApp';
 
 function App() {
 
-  const [user, setUser] = useState(null);
-
+  const { user } = useContext(MyContext);
 
   return (
-    <>
-
-
-      <MyProvider value={{ user, setUser }}>
-        <MenuLink />
-
-          <Routes>
-            <Route path="inicio" element={<Inicio />} />
-            <Route path="productos" element={<Productos />} />
-            <Route path="iniciar-sesion" element={<CardLogin />} />
-            <Route path="registro" element={<CardRegistro />} />
-            <Route path="perfil" element={<CardPerfil />} />
-            <Route path="continua compra" element={<ContinuaCompra />} />
-            <Route path="checkout" element={<CardCheckout />} />
-          </Routes>
-
-
-      </MyProvider>
-
-      <Footer />
-    </>
-  )
+      <Routes>
+        <Route path="/login" element={<CamposLogin />} />
+        <Route path="/*" element={user?.role === 'admin' ? <AdminApp /> : <UserApp />} />
+      </Routes>
+  );
 }
 
-export default App
+export default function MainApp() {
+  return (
+    <MyProvider>
+      <App />
+    </MyProvider>
+  );
+}

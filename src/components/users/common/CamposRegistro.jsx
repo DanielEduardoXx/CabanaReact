@@ -190,7 +190,7 @@ export default function CamposRegistro() {
             } catch (error) {
                 console.error('Error:', error.response?.data || error.message);
                 if (error) {
-                    setErrorId('Parece que ya tienes una cuenta');
+                    setErrorId('Error:', error);
                 }
             }
         }

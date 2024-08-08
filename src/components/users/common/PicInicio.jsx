@@ -29,7 +29,7 @@ const HeaderComponent = () => {
     <div style={headerStyle}>
       {user ? (
         <div>
-          <h1>Bienvenido, {user.name}</h1>
+          <h1>Bienvenido, {user.user.name}</h1>
         </div>
       ) : (
         <div>

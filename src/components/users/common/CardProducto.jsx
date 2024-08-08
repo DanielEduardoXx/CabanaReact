@@ -1,18 +1,21 @@
 import { Box, Paper, Typography, Grid, Button } from "@mui/material";
 import CtrlCantidad from "./CtrlCantidad";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { MyContext } from "../../../services/MyContext";
 
-function CardProducto({ productos, agregarCompra, actualizarCantidad, eliminarProducto, noProductos }) {
+function CardProducto({ productos, agregarCompra }) {
+  const { user } = useContext(MyContext);
+  const userId = user && user.user ? String(user.user.id) : "guest"; // Usa 'guest' como valor predeterminado si el usuario no está definido
+  const storageKey = `cantidades_${userId}`;
+
   const [cantidades, setCantidades] = useState(() => {
-    const savedCantidades = localStorage.getItem("cantidades");
+    const savedCantidades = localStorage.getItem(storageKey);
     return savedCantidades ? JSON.parse(savedCantidades) : {};
   });
 
   useEffect(() => {
-    localStorage.setItem("cantidades", JSON.stringify(cantidades));
-  }, [cantidades]);
-
-  const ruta = "../../../../../public";
+    localStorage.setItem(storageKey, JSON.stringify(cantidades));
+  }, [cantidades, storageKey]);
 
   const handleCantidadChange = (id, valor) => {
     setCantidades(prevCantidades => ({
@@ -22,58 +25,67 @@ function CardProducto({ productos, agregarCompra, actualizarCantidad, eliminarPr
   };
 
   const handleComprar = (producto) => {
+    if (!producto.id) {
+      console.error('Producto sin id:', producto);
+      return;
+    }
     const compra = {
       id: producto.id,
       cantidad: cantidades[producto.id] || 0,
       producto: producto,
     };
     agregarCompra(compra);
-    // handleCantidadChange(producto.id, 0); // Reset cantidad a 0 después de la compra
   };
+
+  const ruta = "../../../../../public";
 
   return (
     <Box sx={{ padding: "2rem", margin: "1rem" }}>
       <Grid container spacing={2}>
         {Array.isArray(productos) && productos.length > 0 ? (
-          productos.map((producto) => (
-            <Grid item xs={12} sm={6} md={4} key={producto.id}>
-              <Paper elevation={3} sx={{ padding: "1rem" }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Box>
-                    <Typography variant="h6">{producto.nombre || producto.nom_producto}</Typography>
-                    <img
-                      // src={producto.foto}
-                      // src={`${ruta}/'Hamburguesas.jpg`}
-                      src={`${ruta}/Hamburguesas.jpg`}
-                      alt={producto.nombre}
-                      style={{ width: "100px", height: "100px" }}
-                    />
-                    <Typography variant="body1">
-                      Precio: {producto.precio || producto.precio_producto}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          productos.map((producto) => {
+            if (!producto.id) {
+              console.error('Producto sin id:', producto);
+              return null;
+            }
+            return (
+              <Grid item xs={12} sm={6} md={4} key={producto.id}>
+                <Paper elevation={3} sx={{ padding: "1rem" }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Box>
-                      <CtrlCantidad
-                        noProductos={cantidades[producto.id] || 0}
-                        getCantidad={(valor) => handleCantidadChange(producto.id, valor)}
+                      <Typography variant="h6">{producto.nom_producto}</Typography>
+                      <img
+                        src={`${ruta}/Hamburguesas.jpg`}
+                        alt={producto.nombre}
+                        style={{ width: "100px", height: "100px" }}
                       />
+                      <Typography variant="body1">
+                        Precio: {producto.precio_producto}
+                      </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleComprar(producto)}
-                        disabled={!(cantidades[producto.id] > 0)}
-                      >
-                        Comprar
-                      </Button>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                      <Box>
+                        <CtrlCantidad
+                          noProductos={cantidades[producto.id] || 0}
+                          getCantidad={(valor) => handleCantidadChange(producto.id, valor)}
+                        />
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={() => handleComprar(producto)}
+                          disabled={!(cantidades[producto.id] > 0)}
+                        >
+                          Comprar
+                        </Button>
+                      </Box>
                     </Box>
                   </Box>
-                </Box>
-              </Paper>
-            </Grid>
-          ))
+                </Paper>
+              </Grid>
+            );
+          })
         ) : (
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
             <Typography variant="body1">Elige una Categoria</Typography>

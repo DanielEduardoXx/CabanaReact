@@ -9,6 +9,7 @@ import InputLabel from '@mui/material/InputLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 import * as yup from 'yup';
 import { useFormik } from 'formik';
+import pqr from '../../../services/pqr';
 
 // Estilo para los campos
 const FieldWrapper = styled('div')(({ theme }) => ({
@@ -41,9 +42,13 @@ const CamposRegistro = () => {
         validationSchema: validationSchema,
         validateOnChange: false, // No valida en cada cambio
         validateOnBlur: false, // No valida en cada desenfoque
-        onSubmit: (values) => {
-            console.log(values);
-            // Aquí puedes agregar la lógica para enviar los datos a la API
+        onSubmit: async (values) => {
+            try {
+                await pqr.sendSuggestion(values);
+            console.log('Sugerencia enviada con exito',values);
+            } catch (error) {
+                console.error('Error al enviar sugerencia',error);
+            }
         },
     });
 
