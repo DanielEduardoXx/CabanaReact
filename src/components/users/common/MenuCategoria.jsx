@@ -70,5 +70,4 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
   );
 }
 
-
 export default MenuCategoria;

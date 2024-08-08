@@ -166,7 +166,7 @@ const styles = {
  // Función para eliminar  un cliente
   const handleDeleteCliente = async () => {
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/users/${selectedCliente.id}`, {
+      const response = await axios.delete(`http://arcaweb.test/api/V1/clientes/${selectedCliente.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
        
       });

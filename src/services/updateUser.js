@@ -3,7 +3,7 @@ import axios from 'axios';
 export const updateUser = async (userId, formData) => {
     try {
         // const token = localStorage.getItem('access_token');
-        const API_URL = 'http://arcaweb.test/api/V1';
+        const API_URL = 'http://127.0.0.1:8000/api/V1';
 
 
         // if (!token) {

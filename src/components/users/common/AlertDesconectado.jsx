@@ -1,8 +1,9 @@
 import { Box } from "@mui/material";
 import PicDesconectado from "./PicDesconectado";
+import Typography from "@mui/material/Typography";
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
-import {useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 

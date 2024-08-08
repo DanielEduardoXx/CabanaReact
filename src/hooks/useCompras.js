@@ -1,3 +1,5 @@
+// useCompras.js
+
 export const existeProducto = (arreglo, id) => {
   return arreglo.some((item) => item.id === id);
 };
@@ -26,99 +28,118 @@ export function getMenu(productos) {
 }
 
 export function getCompras(userId = "guest") {
-  const key = `cart_${String(userId)}`;
-  try {
-    let compraStore = JSON.parse(localStorage.getItem(key));
-    console.log("getCompras:", compraStore);
-    return compraStore || [];
-  } catch (error) {
-    console.error('Error al leer desde localStorage:', error);
-    return [];
-  }
+  const key = userId ? `cart_${userId}` : `cart_guest`;
+  let compraStore = JSON.parse(localStorage.getItem(key));
+  return compraStore || [];
 }
 
 export function setCompras(nuevaCompra, userId = "guest") {
-  const key = `cart_${String(userId)}`;
-  try {
-    console.log("setCompras:", nuevaCompra);
-    localStorage.setItem(key, JSON.stringify(nuevaCompra));
-  } catch (error) {
-    console.error('Error al guardar en localStorage:', error);
-  }
+  const key = userId ? `cart_${userId}` : `cart_guest`;
+  localStorage.setItem(key, JSON.stringify(nuevaCompra));
+  return nuevaCompra;
 }
 
-export function addCompra(objeto, userId = "guest") {
-  try {
-    const compras = getCompras(userId);
-    if (!existeProducto(compras, objeto.id)) {
-      compras.push(objeto);
-      setCompras(compras, userId);
-      return compras;
-    } else {
-      let compraNueva = compras.map((item) => {
-        if (item.id === objeto.id) {
-          item.cantidad = objeto.cantidad;
+export function addCompra(compra, userId = "guest") {
+  const key = userId ? `cart_${userId}` : `cart_guest`;
+  let compraNueva = [];
+  let compraStore = JSON.parse(localStorage.getItem(key));
+
+  if (compraStore == null) {
+    compraNueva.push(compra);
+  } else {
+    compraNueva = compraStore;
+    if (existeProducto(compraStore, compra.id)) {
+      compraNueva = compraStore.map((item) => {
+        if (item.id === compra.id) {
+          item.cantidad = compra.cantidad;
         }
         return item;
       });
-      setCompras(compraNueva, userId);
-      return compraNueva;
+    } else {
+      compraNueva.push(compra);
     }
-  } catch (error) {
-    console.error('Error al actualizar en localStorage:', error);
-    return [];
   }
+
+  localStorage.setItem(key, JSON.stringify(compraNueva));
+  return compraNueva;
+}
+
+export function updateCompra(objeto, userId = "guest") {
+  const key = userId ? `cart_${userId}` : `cart_guest`;
+  let compraNueva = [];
+  let compraStore = JSON.parse(localStorage.getItem(key));
+
+  if (compraStore != null) {
+    compraNueva = compraStore.map((item) => {
+      if (item.id === objeto.id) {
+        item.cantidad = objeto.cantidad;
+      }
+      return item;
+    });
+    localStorage.setItem(key, JSON.stringify(compraNueva));
+    return compraNueva;
+  }
+  return "Error Actualizar Compra";
 }
 
 export function deleteCompras(compra, userId = "guest") {
-  try {
-    const compras = getCompras(userId);
-    const updatedCompras = compras.filter((item) => item.id !== compra.id);
-    setCompras(updatedCompras, userId);
-    return updatedCompras;
-  } catch (error) {
-    console.error('Error al eliminar en localStorage:', error);
-    return [];
+  const key = userId ? `cart_${userId}` : `cart_guest`;
+  let compraStore = JSON.parse(localStorage.getItem(key));
+
+  if (compraStore != null) {
+    let nuevoCompra = compraStore.filter((c) => c.id !== compra.id);
+    localStorage.setItem(key, JSON.stringify(nuevoCompra));
+    return nuevoCompra;
   }
+  return "Error Borrar Compra";
 }
 
-export function updateFront(objeto, userId = "guest") {
-  try {
-    const compras = getCompras(userId);
-    let comprasFront = [];
-    compras.forEach((item) => {
-      if (item.id === objeto.id && item.cantidad > 0) {
-        item.cantidad = objeto.cantidad;
-        comprasFront.push(item);
-      } else if (item.id !== objeto.id) {
-        comprasFront.push(item);
+export function updateFront(filtro, userId = "guest") {
+  const key = userId ? `cart_${userId}` : `cart_guest`;
+  let nuevoFiltro = [];
+  let compraStore = JSON.parse(localStorage.getItem(key));
+
+  if (compraStore != null) {
+    nuevoFiltro = filtro.map((objetoFiltro) => {
+      if (existeProducto(compraStore, objetoFiltro.id)) {
+        let valor = getNuevaCantidad(compraStore, objetoFiltro.id);
+        objetoFiltro.cantidad = valor;
+      } else {
+        objetoFiltro.cantidad = 0;
       }
+      return objetoFiltro;
     });
-    setCompras(comprasFront, userId);
-    return comprasFront;
-  } catch (error) {
-    console.error('Error al actualizar el frontend:', error);
-    return [];
+  } else {
+    nuevoFiltro = filtro.map((objetoFiltro) => {
+      objetoFiltro.cantidad = 0;
+      return objetoFiltro;
+    });
   }
+  return nuevoFiltro;
 }
 
-export function mergeCarts(userId) {
-  const guestCart = getCompras("guest");
-  const userCart = getCompras(String(userId)); // Asegurarse de que userId sea una cadena
+export const mergeCarts = (userCart, guestCart) => {
+  const cartMap = new Map();
 
-  const mergedCart = [...userCart];
+  // Agregar productos del carrito del usuario al mapa
+  userCart.forEach(item => {
+    cartMap.set(item.id, item);
+  });
 
-  guestCart.forEach(guestItem => {
-    const existingItem = mergedCart.find(item => item.id === guestItem.id);
-    if (existingItem) {
-      existingItem.cantidad += guestItem.cantidad;
+  // Combinar con productos del carrito "guest"
+  guestCart.forEach(item => {
+    if (cartMap.has(item.id)) {
+      const existingItem = cartMap.get(item.id);
+      existingItem.cantidad += item.cantidad;
     } else {
-      mergedCart.push(guestItem);
+      cartMap.set(item.id, item);
     }
   });
 
-  setCompras(mergedCart, String(userId)); // Asegurarse de que userId sea una cadena
-  localStorage.removeItem("cart_guest"); // Limpiar el carrito de guest después de la fusión
-  localStorage.removeItem("cantidades_guest"); // Limpiar el carrito de guest después de la fusión
-  // localStorage.removeItem(`cantidades_${guestItem.id}`); // Limpiar el carrito de guest después de la fusión
+  // Convertir el mapa de vuelta a una lista
+  return Array.from(cartMap.values());
+};
+
+export function getfiltro(productos, opcion) {
+  return productos.filter((item) => item.idCategoria === opcion);
 }

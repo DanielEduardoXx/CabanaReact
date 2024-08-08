@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from 'react-router-dom';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -10,6 +10,8 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import LinearProgress from "@mui/material/LinearProgress";
 import Modal from "@mui/material/Modal";
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import PanToolIcon from '@mui/icons-material/PanTool';
 import { MyContext } from "../../services/MyContext.jsx";
 import MenuCategoria from "./common/MenuCategoria";
@@ -18,10 +20,10 @@ import CardDetalleCarrito from "./common/CardDetalleCarrito";
 import CardTotal from "./common/CardTotal";
 import { allProductosCat } from "../../services/productosxCat";
 import { getProductos } from '../../services/productos';
-import { addCompra, getCompras, updateFront, deleteCompras, mergeCarts } from "../../hooks/useCompras";
+import { addCompra, getCompras, setCompras, updateFront, deleteCompras } from "../../hooks/useCompras"; // Asegúrate de importar correctamente setCompras
 
 const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props}/>;
+  return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const style = {
@@ -42,63 +44,58 @@ const style = {
 function Productos() {
   const navigate = useNavigate();
   const { user } = useContext(MyContext);
-  const userId = user && user.user ? String(user.user.id) : "guest"; // Asegurarse de que userId sea una cadena
   const [productos, setProductos] = useState([]);
   const [filtro, setFiltro] = useState([]);
   const [loading, setLoading] = useState(false);
   const [compra, setCompra] = useState([]);
-  const [carrito, setCarrito] = useState(0);
   const [total, setTotal] = useState(0);
   const [open, setOpen] = useState(false);
   const [productoEditado, setProductoEditado] = useState({});
   const [openDialog, setOpenDialog] = useState(false);
 
-  const [compras, setCompras] = useState(getCompras(userId));
-  const [noCompras, setNoCompras] = useState(compras.length);
+  // Cargar carrito desde localStorage al iniciar
+  useEffect(() => {
+    const storedCart = getCompras(user?.id || "guest");
+    setCompra(storedCart);
+  }, [user]);
 
-  const handleCantidadChange = (cantidad) => {
-    setNoCompras(cantidad);
-  };
+  // Guardar carrito en localStorage cuando cambia
+  useEffect(() => {
+    setCompras(compra, user?.id || "guest");
+  }, [compra, user]);
 
   // Fusionar carritos de guest y user al iniciar sesión
-  useEffect(() => {
+  const fusionarCarritos = () => {
     if (user) {
-      const userId = String(user.user.id); // Asegurarse de que userId sea una cadena
       const comprasGuest = getCompras("guest");
       if (comprasGuest.length > 0) {
-        const comprasUsuario = getCompras(userId);
-        const nuevasCompras = mergeCarts(userId);
+        const comprasUsuario = getCompras(user.id);
+        const nuevasCompras = [...comprasGuest, ...comprasUsuario];
 
-        setCompra(nuevasCompras);
-        setCompras(nuevasCompras, user.user.id);
+        const comprasUnicas = nuevasCompras.reduce((acc, current) => {
+          const x = acc.find(item => item.id === current.id);
+          if (!x) {
+            return acc.concat([current]);
+          } else {
+            x.cantidad += current.cantidad;
+            return acc;
+          }
+        }, []);
+
+        setCompra(comprasUnicas);
+        setCompras(comprasUnicas, user.id);
+        localStorage.removeItem("cart_guest");
       }
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fusionarCarritos();
     }
   }, [user]);
 
-  useEffect(() => {
-    setCompras(getCompras(userId));
-  }, [userId]);
-
-  useEffect(() => {
-    let newTotal = 0;
-    compra.forEach(item => {
-      newTotal += item.producto.precio_producto * item.cantidad;
-    });
-    setTotal(newTotal);
-  }, [compra]);
-
-  const handleOpen = () => {
-    const comprasActualizadas = getCompras(userId);
-    setCompra(comprasActualizadas);
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    let nuevoFiltro = updateFront(filtro, userId);
-    setFiltro(nuevoFiltro);
-  };
-
+  // Cargar productos al seleccionar una categoría
   const handleCategoriaSelect = async (categoriaId) => {
     setLoading(true);
     try {
@@ -111,34 +108,69 @@ function Productos() {
     setLoading(false);
   };
 
+  // Manejar apertura y cierre del modal de carrito
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => {
+    setOpen(false);
+    let nuevoFiltro = updateFront(filtro, user?.id || "guest");
+    setFiltro(nuevoFiltro);
+  };
+
+  // Manejar apertura y cierre del diálogo de confirmación
   const handleOpenDialog = () => setOpenDialog(true);
   const handleCloseDialog = () => setOpenDialog(false);
 
+  // Borrar producto del carrito
   const handleBorrar = () => {
     eliminarProducto(productoEditado);
     setOpenDialog(false);
   };
 
+  // Cancelar eliminación de producto del carrito
   const handleCancelar = () => {
     productoEditado.cantidad = 1;
     agregarCompra(productoEditado);
     setOpenDialog(false);
   };
 
+  // Proceder al checkout
   const handleCheckout = () => {
     navigate(user ? '/checkout' : '/continua compra');
   };
 
-  useEffect(() => {
-    let compras = getCompras(userId);
-    setCarrito(compras.length);
-    setCompra(compras);
-  }, [filtro, userId]);
+  // Actualizar cantidad de un producto en el carrito
+  const actualizarCantidad = (objeto) => {
+    setProductoEditado(objeto);
+    if (objeto.cantidad <= 0) {
+      setOpenDialog(true);
+    } else {
+      const nuevasCompras = addCompra(objeto, user?.id || "guest");
+      setCompra(nuevasCompras);
+      let nuevoFiltro = updateFront(filtro, user?.id || "guest");
+      setFiltro(nuevoFiltro);
+    }
+  };
 
+  // Eliminar producto del carrito
+  const eliminarProducto = (objeto) => {
+    const nuevasCompras = deleteCompras(objeto, user?.id || "guest");
+    setCompra(nuevasCompras);
+    let nuevoFiltro = updateFront(filtro, user?.id || "guest");
+    setFiltro(nuevoFiltro);
+    if (nuevasCompras.length === 0) setOpen(false);
+  };
+
+  // Agregar compra al carrito
+  const agregarCompra = (compra) => {
+    const nuevasCompras = addCompra(compra, user?.id || "guest");
+    setCompra(nuevasCompras);
+  };
+
+  // Calcular el total del carrito
   useEffect(() => {
     let newTotal = 0;
     compra.forEach(item => {
-      const precio = parseFloat(item.producto.precio_producto);
+      const precio = parseFloat(item.producto.precio);
       const cantidad = parseInt(item.cantidad, 10);
       if (!isNaN(precio) && !isNaN(cantidad)) {
         newTotal += precio * cantidad;
@@ -147,54 +179,20 @@ function Productos() {
     setTotal(newTotal);
   }, [compra]);
 
-  const agregarCompra = (compra) => {
-    const nuevasCompras = addCompra(compra, userId);
-    setCompras(nuevasCompras);
-    setNoCompras(nuevasCompras.reduce((acc, item) => acc + item.cantidad, 0)); // Actualizar el número de compras
-  };
-
-  const actualizarCantidad = (objeto) => {
-    setProductoEditado(objeto);
-    if (objeto.cantidad <= 0) {
-      setOpenDialog(true);
-    } else {
-      const nuevasCompras = addCompra(objeto, userId);
-      setCompra(nuevasCompras);
-      let nuevoFiltro = updateFront(filtro, userId);
-      setFiltro(nuevoFiltro);
-    }
-  };
-
-  const eliminarProducto = (objeto) => {
-    let nuevaCompra = deleteCompras(objeto, userId);
-    setCompra(nuevaCompra);
-    let nuevoFiltro = updateFront(filtro, userId);
-    setFiltro(nuevoFiltro);
-    setNoCompras(nuevaCompra.reduce((acc, item) => acc + item.cantidad, 0));
-    if (nuevaCompra.length === 0) setOpen(false);
-  };
-
-    // Cargar todos los productos al montar el componente
-    useEffect(() => {
-      handleCategoriaSelect(null);
-    }, []);
-
   const ruta = "../../../../public";
+
+  console.log('Estado de compra:', compra); // Verifica el estado de compra
 
   return (
     <Box sx={{ bgcolor: "#ffffff" }}>
-      <MenuCategoria 
-        getValor={handleCategoriaSelect} 
-        noCompras={noCompras} 
-        openModal={handleOpen} 
-      />
+      <MenuCategoria getValor={handleCategoriaSelect} noCompras={compra.length} openModal={handleOpen} />
       {!loading ? (
         <CardProducto
           productos={productos}
           agregarCompra={agregarCompra}
           actualizarCantidad={actualizarCantidad}
           eliminarProducto={eliminarProducto}
-          noProductos={noCompras}
+          noProductos={compra.length}
         />
       ) : (
         <Box sx={{ width: "100%" }}>
@@ -202,21 +200,16 @@ function Productos() {
         </Box>
       )}
 
-      <Modal 
-        style={{ zIndex: "20" }} 
-        open={open} 
-        onClose={handleClose} 
-        aria-labelledby="modal-modal-title" 
-        aria-describedby="modal-modal-description"
-      >
+      <Modal style={{ zIndex: "20" }} open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
         <Box sx={style}>
           <Box>
             {compra.map((item) => (
               <CardDetalleCarrito
                 key={item.id}
                 id={item.id}
-                titulo={item.producto.nom_producto}
-                precio={item.producto.precio_producto}
+                titulo={item.producto.nombre}
+                precio={item.producto.precio}
+                detalle={item.producto.detalle}
                 foto={item.producto.foto || `${ruta}/Hamburguesas.jpg`}
                 noProductos={item.cantidad}
                 monitor={actualizarCantidad}
@@ -232,26 +225,18 @@ function Productos() {
         </Box>
       </Modal>
 
-      <Dialog 
-        style={{ zIndex: "100" }} 
-        open={openDialog} 
-        TransitionComponent={Transition} 
-        keepMounted 
-        onClose={handleCloseDialog} 
-        aria-describedby="alert-dialog-slide-description"
-      >
+      <Dialog style={{ zIndex: "100" }} open={openDialog} TransitionComponent={Transition} keepMounted onClose={handleCloseDialog} aria-describedby="alert-dialog-slide-description">
         <DialogTitle>
-          <PanToolIcon /> {"Desea eliminar este producto de su carrito?"}
+          <PanToolIcon /> {"Desea eliminar este producto?"}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-slide-description">
-            Si presiona Aceptar, se eliminará este producto de su carrito de
-            compras.
+            Al editar el valor de la cantidad en cero (0) puede eliminar el producto
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancelar}>Cancelar</Button>
-          <Button onClick={handleBorrar}>Aceptar</Button>
+          <Button variant="contained" color="error" endIcon={<DeleteForeverIcon />} onClick={handleBorrar}>Borrar</Button>
+          <Button variant="contained" color="success" endIcon={<AddShoppingCartIcon />} onClick={handleCancelar}>Cancelar</Button>
         </DialogActions>
       </Dialog>
     </Box>

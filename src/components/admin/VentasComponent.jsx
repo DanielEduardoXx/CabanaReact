@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
   Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
@@ -6,7 +6,6 @@ import {
   DialogContentText, DialogActions
 } from '@mui/material';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
-import { MyContext } from '../../services/MyContext';
 
 const styles = {
   mainBox: {
@@ -31,7 +30,6 @@ const styles = {
 };
 
 const VentasComponent = ({ searchQuery }) => {
-  const { user } = useContext(MyContext);
   const [ventasData, setVentasData] = useState([]);
   const [filteredVentasData, setFilteredVentasData] = useState([]);
   const [isNewVentasModalOpen, setIsNewVentasModalOpen] = useState(false);
@@ -41,16 +39,11 @@ const VentasComponent = ({ searchQuery }) => {
   const [selectedVenta, setSelectedVenta] = useState(null);
   const [detVenta, setDetVenta] = useState(null);
 
-const userSession=JSON.parse(sessionStorage.getItem('user'));
-const token = userSession?.token?.access_token;
-
   const fetchVentasData = async () => {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/ventas',{
-        headers: { 'Authorization': `Bearer ${token}`}
-      });
-      if (response.status === 200) {
-        setVentasData(response.data.data);
+      const response = await axios.get('http://arcaweb.test/api/V1/ventas');
+      if (response.data && Array.isArray(response.data)) {
+        setVentasData(response.data);
       } else {
         console.error('Datos de ventas no válidos:', response.data);
       }
@@ -61,10 +54,9 @@ const token = userSession?.token?.access_token;
 
   const fetchDetVentaData = async (ventaId) => {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/detventas',{
-        headers: { 'Authorization': `Bearer ${token}`}});
+      const response = await axios.get('http://arcaweb.test/api/V1/detventas');
       console.log('Datos de detalle de venta obtenidos de la API:', response.data);
-      if (response.status === 200) {
+      if (response.data && Array.isArray(response.data.data)) {
         const filteredDetVenta = response.data.data.filter(det => det.venta_id === ventaId);
         setDetVenta(filteredDetVenta);
       } else {
@@ -101,7 +93,6 @@ const token = userSession?.token?.access_token;
     try {
       const response = await axios.post('http://arcaweb.test/api/V1/ventas', newventaData, {
         headers: {
-           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -130,7 +121,6 @@ const token = userSession?.token?.access_token;
     try {
       const response = await axios.put(`http://arcaweb.test/api/V1/ventas/${selectedVenta.id}`, editedVentaData, {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -148,13 +138,7 @@ const token = userSession?.token?.access_token;
 
   const handleDeleteVenta = async () => {
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/ventas/${selectedVenta.id}`,{
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
-      }
- 
-      );
+      const response = await axios.delete(`http://arcaweb.test/api/V1/ventas/${selectedVenta.id}`);
       if (response.status === 204 || response.status === 200) {
         setVentasData(ventasData.filter(venta => venta.id !== selectedVenta.id));
         handleCloseDeleteVentaDialog();
