@@ -98,7 +98,7 @@ const styles = {
         }
       });
 
-      if (response.status === 201) {
+      if (response.status === 200) {
         setSugerenciasData([...sugerenciasData, response.data]);
         setFilteredSugerenciasData([...filteredSugerenciasData, response.data]);
         handleCloseNewSugerenciaModal();

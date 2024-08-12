@@ -1,11 +1,11 @@
-import React, { useState, useEffect ,useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import {
   Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Modal, TextField, IconButton, Dialog, DialogTitle, DialogContent,
-  DialogContentText, DialogActions
+  DialogContentText, DialogActions, Select, MenuItem
 } from '@mui/material';
-import { Visibility, Edit, Delete } from '@mui/icons-material';
+import { Visibility, Edit, Delete, Add } from '@mui/icons-material';
 import { MyContext } from '../../services/MyContext';
 
 // Estilos para el componente
@@ -24,15 +24,14 @@ const styles = {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: '400px',
+    width: '900px',
     backgroundColor: 'white',
-    padding: '1rem',
+    padding: '3rem',
     boxShadow: 24,
   },
 };
 
-// Componente principal
-  const PromocionesComponent = ({ searchQuery }) => {
+const PromocionesComponent = ({ searchQuery }) => {
   const { user } = useContext(MyContext);
   const [promocionesData, setPromocionesData] = useState([]);
   const [filteredPromocionesData, setFilteredPromocionesData] = useState([]);
@@ -41,36 +40,64 @@ const styles = {
   const [isEditPromocionModalOpen, setIsEditPromocionModalOpen] = useState(false);
   const [isDeletePromocionesDialogOpen, setIsDeletePromocionDialogOpen] = useState(false);
   const [selectedPromocion, setSelectedPromocion] = useState(null);
-
-  const userSession=JSON.parse(sessionStorage.getItem('user'));
-  console.log( "userSession ",userSession);
+  const [productos, setProductos] = useState([]);
+  const [productosSeleccionados, setProductosSeleccionados] = useState([{
+  id: '',
+  nom_producto: '',
+  precio_producto: 0,
+  cantidad: 1,
+  descuento: 0,
+  subtotal: 0,
+}]);
+  
+  const userSession = JSON.parse(sessionStorage.getItem('user'));
   const token = userSession?.token?.access_token;
-  console.log("hola ",token);
 
-  // Función para obtener los datos de las promociones desde la API al cargar el componente
+  // Función para obtener los datos de las promociones y productos
   const fetchPromocionesData = async () => {
-    if (user) {
-      try {
-        const response = await axios.get('http://arcaweb.test/api/V1/promociones', {
-          headers: { 'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json' 
+    if (!user) {
+      console.error("Access token no disponible");
+      return;
+    }
+
+    try {
+      const response = await axios.get('http://arcaweb.test/api/V1/promociones?included=detpromociones.producto', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         }
-        });
+      });
+      console.log('Data obtenidas de la API:', response.data.data);
       if (response.status === 200) {
         setPromocionesData(response.data.data);
       } else {
-        console.error('Datos de categorias no válidos:', response.data.data);
+        console.error('Datos de categorías no válidos:', response.data.data);
       }
     } catch (error) {
-      console.error('Error al obtener datos de categorias:', error);
+      console.error('Error al obtener datos de categorías:', error);
     }
-  } else {
-    console.error("Access token no disponible");
-  }
-};
+  };
+
+
+
+  // Función para obtener los datos de los productos
+  const fetchProductosData = async () => {
+    try {
+      const response = await axios.get('http://arcaweb.test/api/V1/productos', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      });
+      setProductos(response.data.data);
+    } catch (error) {
+      console.error('Error al obtener productos:', error);
+    }
+  };
 
   useEffect(() => {
     fetchPromocionesData();
+    fetchProductosData();
   }, []);
 
   // Función para filtrar las promociones según la búsqueda
@@ -79,98 +106,158 @@ const styles = {
       promocionesData.filter(promocion =>
         (promocion.id && promocion.id.toString().toLowerCase().includes(searchQuery.toLowerCase())) ||
         (promocion.nom_promo && promocion.nom_promo.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (promocion.total_promo && promocion.total_promo.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (promocion.categoria_id && promocion.categoria_id.toString().includes(searchQuery))
+        (promocion.total_promo && promocion.total_promo.toLowerCase().includes(searchQuery.toLowerCase()))
       )
     );
   }, [searchQuery, promocionesData]);
 
-  // Función para agregar una nueva promoción
-  const handleAddPromocion = async (event) => {
-    event.preventDefault();
-    const newPromocionesData = {
-      nom_promo: event.target.nom_promo.value,
-      total_promo: event.target.total_promo.value,
-      categoria_id: event.target.categoria_id.value,
-    };
+  // Función para calcular el subtotal
+  const calcularSubtotal = (precio, cantidad, descuento) => {
+    const descuentoMonto = (precio * cantidad) * (descuento / 100);
+    return (precio * cantidad) - descuentoMonto;
+  };
 
-    try {
-      const response = await axios.post('http://arcaweb.test/api/V1/promociones', newPromocionesData,{
-        headers: { 'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json' 
+
+  // Función para manejar la selección de productos
+  const handleProductChange = (index, field, value) => {
+    setProductosSeleccionados((prevState) => {
+      const newState = [...prevState];
+      newState[index] = {
+        ...newState[index],
+        [field]: value,
+      };
+
+      if (field === 'id') {
+        const selectedProducto = productos.find(prod => prod.id === value);
+        newState[index].nom_producto = selectedProducto.nom_producto;
+        newState[index].precio_producto = selectedProducto.precio_producto;
       }
+
+      if (field === 'cantidad' || field === 'descuento' || field === 'precio_producto') {
+        newState[index].subtotal = calcularSubtotal(
+          newState[index].precio_producto,
+          newState[index].cantidad,
+          newState[index].descuento
+        );
+      }
+      return newState;
+    });
+  };
+
+  const handleOpenNewPromocionModal = () => {
+    setIsNewPromocionModalOpen(true);
+    setProductosSeleccionados([{
+      id: '',
+      nom_producto: '',
+      precio_producto: 0,
+      cantidad: 1,
+      descuento: 0,
+      subtotal: 0,
+    }]);
+  };
+
+  const handleCloseNewPromocionModal = () => {
+    setIsNewPromocionModalOpen(false);
+    setProductosSeleccionados([]);
+  };
+
+  const handleAddProductRow = () => {
+    setProductosSeleccionados((prevState) => [
+      ...prevState,
+      {
+        id: '',
+        nom_producto: '',
+        precio_producto: 0,
+        cantidad: 1,
+        descuento: 0,
+        subtotal: 0,
+      },
+    ]);
+  };
+
+
+
+
+
+// Función para agregar una nueva promoción
+const handleAddPromocion = async (event) => {
+  event.preventDefault();
+
+  const nuevaPromocion = {
+      nom_promo: event.target.nom_promo.value, // Nombre de la promoción
+      total_promo: productosSeleccionados.reduce((total, prod) => total + prod.subtotal, 0), // Calcula el total sumando los subtotales de los productos seleccionados
+      detpromociones: productosSeleccionados.map((prod) => ({
+          cantidad: prod.cantidad,
+          descuento: prod.descuento,
+          subtotal: prod.subtotal,
+          producto_id: prod.id, //  este es el ID del producto
+      })),
+  };
+
+  try {
+      const response = await axios.post('http://arcaweb.test/api/V1/promociones', nuevaPromocion, {
+          headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+          },
       });
 
       if (response.status === 201) {
-        setPromocionesData([...promocionesData, response.data]);
-        setFilteredPromocionesData([...filteredPromocionesData, response.data]);
-        handleCloseNewPromocionModal();
+          setPromocionesData([...promocionesData, response.data]);
+          setFilteredPromocionesData([...filteredPromocionesData, response.data]);
+          handleCloseNewPromocionModal();
       } else {
-        console.error('Error al agregar la promoción:', response.data);
+          console.error('Error al agregar la promoción:', response.data);
       }
-    } catch (error) {
+  } catch (error) {
       console.error('Error al agregar la promoción:', error.response ? error.response.data : error.message);
-    }
+  }
+};
+
+// Función para manejar la edición de una promoción
+const handleEditPromocionSubmit = async (event) => {
+  event.preventDefault();
+
+  // Recolectar los datos actualizados de la promoción seleccionada
+  const promocionActualizada = {
+      nom_promo: event.target.nom_promo.value,
+      total_promo: productosSeleccionados.reduce((total, prod) => total + prod.subtotal, 0),
+      detpromociones: productosSeleccionados.map((prod) => ({
+          cantidad: prod.cantidad,
+          descuento: (prod.precio_producto * prod.cantidad) * (prod.descuento / 100), // Convertir porcentaje a valor monetario
+          subtotal: prod.subtotal,
+          producto_id: prod.id,
+      })),
   };
 
-  // Función para editar una promoción
-  const handleEditPromocionSubmit = async (event) => {
-    event.preventDefault();
-    const editedPromocionesData = {
-      nom_promo: event.target.nom_promo.value,
-      total_promo: event.target.total_promo.value,
-      categoria_id: event.target.categoria_id.value,
-    };
-
-    try {
-      const response = await axios.patch(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`, editedPromocionesData,{
-        headers: { 'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json' 
-      }
+  try {
+      const response = await axios.patch(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`, promocionActualizada, {
+          headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+          },
       });
 
       if (response.status === 200) {
-        setPromocionesData(promocionesData.map(promocion => promocion.id === selectedPromocion.id ? response.data : promocion));
-        setFilteredPromocionesData(filteredPromocionesData.map(promocion => promocion.id === selectedPromocion.id ? response.data : promocion));
-        handleCloseEditPromocionModal();
+          setPromocionesData(promocionesData.map(promocion =>
+              promocion.id === selectedPromocion.id ? response.data : promocion
+          ));
+          setFilteredPromocionesData(filteredPromocionesData.map(promocion =>
+              promocion.id === selectedPromocion.id ? response.data : promocion
+          ));
+          handleCloseEditPromocionModal();
       } else {
-        console.error('Error al editar promoción:', response.data);
+          console.error('Error al editar la promoción:', response.data);
       }
-    } catch (error) {
-      console.error('Error al editar promoción:', error.response ? error.response.data : error.message);
-    }
-  };
+  } catch (error) {
+      console.error('Error al editar la promoción:', error.response ? error.response.data : error.message);
+  }
+};
 
-  // Función para eliminar una promoción
-  const handleDeletePromocion = async () => {
-    try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`, {
-        headers: { 'Authorization': `Bearer ${token}`  
-      }
-      });
-      if (response.status === 204 || response.status === 200) {
-        setPromocionesData(promocionesData.filter(promocion => promocion.id !== selectedPromocion.id));
-        setFilteredPromocionesData(filteredPromocionesData.filter(promocion => promocion.id !== selectedPromocion.id));
-        handleCloseDeletePromocionesDialog();
-      } else {
-        console.error('Error al eliminar promoción:', response.data);
-      }
-    } catch (error) {
-      console.error('Error al eliminar promoción:', error);
-    }
-  };
 
-  // Maneja la apertura del modal de nueva promoción
-  const handleOpenNewPromocionModal = () => {
-    setIsNewPromocionModalOpen(true);
-  };
 
-  // Maneja el cierre del modal de nueva promoción
-  const handleCloseNewPromocionModal = () => {
-    setIsNewPromocionModalOpen(false);
-    fetchPromocionesData();
-  };
 
+  
   // Maneja la apertura del modal de visualización de promociones
   const handleViewPromocion = (promocion) => {
     setSelectedPromocion(promocion);
@@ -186,25 +273,30 @@ const styles = {
   const handleEditPromocion = (promocion) => {
     setSelectedPromocion(promocion);
     setIsEditPromocionModalOpen(true);
+    setProductosSeleccionados(promocion.detpromociones.map(det => ({
+      ...det.producto,
+      cantidad: det.cantidad,
+      descuento: det.descuento,
+      subtotal: det.subtotal
+    })));
   };
 
   // Maneja el cierre del modal de edición de promociones
   const handleCloseEditPromocionModal = () => {
     setIsEditPromocionModalOpen(false);
-    fetchPromocionesData();
+    setProductosSeleccionados([]);
   };
 
-  // Maneja la apertura del diálogo de confirmación de eliminación de promociones
   const handleOpenDeletePromocionesDialog = (promocion) => {
-    setSelectedPromocion(promocion);
-    setIsDeletePromocionDialogOpen(true);
+    setIsDeletePromocionDialogOpen(promocion);
+    setIsDeleteDialogOpen(true);
   };
 
-  // Maneja el cierre del diálogo de confirmación de eliminación de promociones
+
   const handleCloseDeletePromocionesDialog = () => {
-    setIsDeletePromocionDialogOpen(false);
-    setSelectedPromocion(null);
-  };
+  setIsDeletePromocionDialogOpen(false);
+  setSelectedPromocion(null);
+};
 
   return (
     <Box style={styles.mainBox}>
@@ -225,7 +317,6 @@ const styles = {
               <TableCell>ID Promoción</TableCell>
               <TableCell>Nombre Promoción</TableCell>
               <TableCell>Total</TableCell>
-             
               <TableCell>Acciones</TableCell>
             </TableRow>
           </TableHead>
@@ -235,7 +326,6 @@ const styles = {
                 <TableCell>{promocion.id}</TableCell>
                 <TableCell>{promocion.nom_promo}</TableCell>
                 <TableCell>{promocion.total_promo}</TableCell>
-                
                 <TableCell>
                   <IconButton onClick={() => handleViewPromocion(promocion)}>
                     <Visibility />
@@ -258,18 +348,83 @@ const styles = {
         <Box style={styles.modal}>
           <Typography variant="h6">Nueva Promoción</Typography>
           <form onSubmit={handleAddPromocion}>
-            <TextField id="nom_promo" label="Nombre Promoción" type="text" fullWidth margin="normal" />
-            <TextField id="total_promo" label="Total" type="number" fullWidth margin="normal" />
-            <TextField id="categoria_id" label="Id Categoria" type="number" fullWidth margin="normal" />
-            <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
-              <Button onClick={handleCloseNewPromocionModal} sx={{ marginRight: 1 }}>Cancelar</Button>
-              <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
-                Guardar
+            <TextField
+              id="nom_promo"
+              label="Nombre de la Promoción"
+              fullWidth
+              margin="normal"
+            />
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Producto</TableCell>
+                  <TableCell>Precio</TableCell>
+                  <TableCell>Cantidad</TableCell>
+                  <TableCell>Descuento (%)</TableCell>
+                  <TableCell>Subtotal</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {productosSeleccionados.map((producto, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <Select
+                        value={producto.id}
+                        onChange={(e) => handleProductChange(index, 'id', e.target.value)}
+                        fullWidth
+                      >
+                        {productos.map((prod) => (
+                          <MenuItem key={prod.id} value={prod.id}>
+                            {prod.nom_producto}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        type="number"
+                        value={producto.precio_producto}
+                        onChange={(e) => handleProductChange(index, 'precio_producto', parseFloat(e.target.value))}
+                        disabled
+                        fullWidth
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        type="number"
+                        value={producto.cantidad}
+                        onChange={(e) => handleProductChange(index, 'cantidad', parseInt(e.target.value))}
+                        fullWidth
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        type="number"
+                        value={producto.descuento}
+                        onChange={(e) => handleProductChange(index, 'descuento', parseFloat(e.target.value))}
+                        fullWidth
+                      />
+                    </TableCell>
+                    <TableCell>{producto.subtotal.toFixed(2)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <Box sx={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
+              <Button variant="outlined" onClick={handleAddProductRow} startIcon={<Add />}>
+                Añadir Producto
               </Button>
+              <Box>
+                <Button onClick={handleCloseNewPromocionModal} sx={{ marginRight: 1 }}>Cancelar</Button>
+                <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
+                  Guardar
+                </Button>
+              </Box>
             </Box>
           </form>
         </Box>
       </Modal>
+
 
       {/* Modal para visualizar promoción */}
       <Modal open={isViewPromocionModalOpen} onClose={handleCloseViewPromocionModal}>
@@ -280,7 +435,28 @@ const styles = {
               <Typography>ID Promoción: {selectedPromocion.id}</Typography>
               <Typography>Nombre Promoción: {selectedPromocion.nom_promo}</Typography>
               <Typography>Total: {selectedPromocion.total_promo}</Typography>
-              <Typography>Id Categoria: {selectedPromocion.categoria_id}</Typography>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Producto</TableCell>
+                    <TableCell>Precio</TableCell>
+                    <TableCell>Cantidad</TableCell>
+                    <TableCell>Descuento</TableCell>
+                    <TableCell>Subtotal</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {selectedPromocion.detpromociones.map((detalle) => (
+                    <TableRow key={detalle.id}>
+                      <TableCell>{detalle.producto.nom_producto}</TableCell>
+                      <TableCell>{detalle.producto.precio_producto}</TableCell>
+                      <TableCell>{detalle.cantidad}</TableCell>
+                      <TableCell>{detalle.descuento}</TableCell>
+                      <TableCell>{detalle.subtotal}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
               <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
                 <Button onClick={handleCloseViewPromocionModal}>Cerrar</Button>
               </Box>
@@ -290,24 +466,89 @@ const styles = {
       </Modal>
 
       {/* Modal para editar promoción */}
-      <Modal open={isEditPromocionModalOpen} onClose={handleCloseEditPromocionModal}>
-        <Box style={styles.modal}>
-          <Typography variant="h6">Editar Promoción</Typography>
-          {selectedPromocion && (
-            <form onSubmit={handleEditPromocionSubmit}>
-              <TextField id="nom_promo" label="Nombre Promoción" fullWidth margin="normal" defaultValue={selectedPromocion.nom_promo} />
-              <TextField id="total_promo" label="Total" fullWidth margin="normal" defaultValue={selectedPromocion.total_promo} />
-              <TextField id="categoria_id" label="Id Categoria" fullWidth margin="normal" defaultValue={selectedPromocion.categoria_id} />
-              <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
-                <Button onClick={handleCloseEditPromocionModal} sx={{ marginRight: 1 }}>Cancelar</Button>
-                <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
-                  Guardar
-                </Button>
-              </Box>
-            </form>
-          )}
+<Modal open={isEditPromocionModalOpen} onClose={handleCloseEditPromocionModal}>
+  <Box style={styles.modal}>
+    <Typography variant="h6">Editar Promoción</Typography>
+    {selectedPromocion && (
+      <form onSubmit={handleEditPromocionSubmit}>
+        <TextField
+          id="nom_promo"
+          label="Nombre de la Promoción"
+          defaultValue={selectedPromocion.nom_promo}
+          fullWidth
+          margin="normal"
+        />
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Producto</TableCell>
+              <TableCell>Precio</TableCell>
+              <TableCell>Cantidad</TableCell>
+              <TableCell>Descuento (%)</TableCell>
+              <TableCell>Subtotal</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {productosSeleccionados.map((producto, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <Select
+                    value={producto.id}
+                    onChange={(e) => handleProductChange(index, 'id', e.target.value)}
+                  >
+                    {productos.map((prod) => (
+                      <MenuItem key={prod.id} value={prod.id}>
+                        {prod.nom_producto}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    type="number"
+                    value={producto.precio_producto}
+                    onChange={(e) => handleProductChange(index, 'precio_producto', parseFloat(e.target.value))}
+                    disabled
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    type="number"
+                    value={producto.cantidad}
+                    onChange={(e) => handleProductChange(index, 'cantidad', parseInt(e.target.value))}
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    type="number"
+                    value={producto.descuento}
+                    onChange={(e) => handleProductChange(index, 'descuento', parseFloat(e.target.value))}
+                  />
+                </TableCell>
+                <TableCell>{producto.subtotal.toFixed(2)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <Box sx={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
+          <Button variant="outlined" onClick={handleAddProductRow} startIcon={<Add />}>
+            Añadir Producto
+          </Button>
+          <Box>
+            <Button onClick={handleCloseEditPromocionModal} sx={{ marginRight: 1 }}>Cancelar</Button>
+            <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
+              Guardar
+            </Button>
+          </Box>
         </Box>
-      </Modal>
+      </form>
+    )}
+  </Box>
+</Modal>
+
+
+
+
 
       {/* Diálogo para confirmar eliminación */}
       <Dialog open={isDeletePromocionesDialogOpen} onClose={handleCloseDeletePromocionesDialog}>
@@ -319,7 +560,7 @@ const styles = {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDeletePromocionesDialog}>Cancelar</Button>
-          <Button type="submit" variant="contained" onClick={handleDeletePromocion} sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
+          <Button type="submit" variant="contained" onClick={handleCloseDeletePromocionesDialog} sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
             Confirmar
           </Button>
         </DialogActions>
