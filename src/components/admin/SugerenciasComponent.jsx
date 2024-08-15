@@ -201,7 +201,6 @@ const styles = {
           <TableHead>
             <TableRow>
               <TableCell>Id</TableCell>
-              <TableCell>Sugerencia</TableCell>
               <TableCell>Tipo sugerencia</TableCell>
               <TableCell>Estado</TableCell>
               <TableCell>Id Usuario</TableCell>
@@ -214,7 +213,6 @@ const styles = {
             {filteredSugerenciasData.map((sugerencia,id) => (
               <TableRow key={id}>
                 <TableCell>{sugerencia.id}</TableCell>
-                <TableCell>{sugerencia.sugerencia}</TableCell>
                 <TableCell>{sugerencia.tipo_suge}</TableCell>
                 <TableCell>{sugerencia.estado}</TableCell>
                 <TableCell>{sugerencia.user_id}</TableCell>
