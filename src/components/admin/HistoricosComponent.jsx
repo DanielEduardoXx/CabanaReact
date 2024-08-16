@@ -50,7 +50,7 @@ console.log("hola ",token);
 const fetchVentasData = async () => {
 if (user) {
 try {
-const response = await axios.get('http://arcaweb.test/api/V1/ventas', {
+const response = await axios.get('http://arcaweb.test/api/V1/ventaCompletado', {
   headers: { 'Authorization': `Bearer ${token}`,
   'Content-Type': 'application/json' 
 }

@@ -173,107 +173,111 @@ const PromocionesComponent = ({ searchQuery }) => {
   };
 
   // Función para agregar una nueva promoción
-const handleAddPromocion = async (event) => {
-  event.preventDefault();
+  const handleAddPromocion = async (event) => {
+    event.preventDefault();
+  
+    const nuevaPromocion = {
+      nom_promo: event.target.nom_promo.value,
+      total_promo: productosSeleccionados.reduce((total, prod) => total + prod.subtotal, 0),
+      categoria_id: 5,
+    };
+    try {
+      // Enviar la solicitud para crear la promoción principal
+      const response = await axios.post('http://arcaweb.test/api/V1/promociones', nuevaPromocion, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (response.status === 201) {
+        
+        const promocionId = response.data.data.id
+        //console.log( response.data.data.id)
+       
+  
+        // Crear los detalles de la promoción
+        const detalles = productosSeleccionados.map((prod) => ({
+          cantidad: prod.cantidad,
+          descuento: prod.descuento,
+          subtotal: prod.subtotal,
+          promocione_id: promocionId,
+          producto_id: prod.id,
+        }));
+        console.log()
 
-  const nuevaPromocion = {
-    nom_promo: event.target.nom_promo.value,
-    total_promo: productosSeleccionados.reduce((total, prod) => total + prod.subtotal, 0),
-    categoria_id: 5,
+
+
+        
+        await axios.post('http://arcaweb.test/api/V1/detpromociones', { detalles }, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+  
+        await fetchPromocionesData(); // Actualizar la lista de promociones
+        handleCloseNewPromocionModal();
+      } else {
+        console.error('Error al agregar la promoción:', response.data);
+      }
+    } catch (error) {
+      console.error('Error al agregar la promoción:', error.response ? error.response.data : error.message);
+    }
   };
+  
 
-  try {
-    const response = await axios.post('http://arcaweb.test/api/V1/promociones', nuevaPromocion, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
 
-    if (response.status === 201) {
-      const promocionId = response.data.id;
-      const detallesPromises = productosSeleccionados.map((prod) => {
-        const detallePromocion = {
+
+
+  const handleEditPromocionSubmit = async (event) => {
+    event.preventDefault();
+  
+    const promocionActualizada = {
+      nom_promo: event.target.nom_promo.value,
+      total_promo: productosSeleccionados.reduce((total, prod) => total + prod.subtotal, 0),
+    };
+  
+    try {
+      // Enviar la solicitud para actualizar la promoción principal
+      const responsePromocion = await axios.put(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`, promocionActualizada, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (responsePromocion.status === 200) {
+        const detalles = productosSeleccionados.map((prod) => ({
+          id: prod.detalle_id, // Debe ser el ID correcto del detalle
           cantidad: prod.cantidad,
           descuento: prod.descuento,
           subtotal: prod.subtotal,
           producto_id: prod.id,
-          promocione_id: promocionId,
-        };
-        return axios.post('http://arcaweb.test/api/V1/detpromociones', detallePromocion, {
+        }));
+  
+        // Crear un array de promesas para cada detalle
+        const updatePromises = detalles.map((detalle) => axios.put(`http://arcaweb.test/api/V1/detpromociones/${detalle.id}`, { detalles: [detalle] }, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-        });
-      });
-
-      await Promise.all(detallesPromises);
-      await fetchPromocionesData();
-      handleCloseNewPromocionModal();
-    } else {
-      console.error('Error al agregar la promoción:', response.data);
+        }));
+  
+        // Esperar a que todas las promesas se resuelvan
+        await Promise.all(updatePromises);
+  
+        await fetchPromocionesData(); // Actualizar la lista de promociones
+        handleCloseEditPromocionModal();
+      } else {
+        console.error('Error al editar la promoción:', responsePromocion.data);
+      }
+    } catch (error) {
+      console.error('Error al editar la promoción:', error.response ? error.response.data : error.message);
     }
-  } catch (error) {
-    console.error('Error al agregar la promoción:', error.response ? error.response.data : error.message);
-  }
-};
-
-
-const handleEditPromocionSubmit = async (event) => {
-  event.preventDefault();
-
-  // Verificar que todos los productos seleccionados tienen un detalle_id
-  const productosValidos = productosSeleccionados.every(prod => prod.detalle_id);
-
-  if (!productosValidos) {
-    console.error("Algunos productos seleccionados no tienen un ID de detalle definido.");
-    return;
-  }
-
-  // Recolectar los datos actualizados de la promoción seleccionada
-  const promocionActualizada = {
-    nom_promo: event.target.nom_promo.value,
-    total_promo: productosSeleccionados.reduce((total, prod) => total + prod.subtotal, 0),
   };
-
-  try {
-    // Enviar la solicitud para actualizar la promoción principal
-    const response = await axios.patch(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`, promocionActualizada, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (response.status === 200) {
-      // Actualizar los detalles de la promoción
-      const updateDetallesPromises = productosSeleccionados.map((prod) => {
-        const detallePromocionActualizado = {
-          cantidad: prod.cantidad,
-          descuento: (prod.precio_producto * prod.cantidad) * (prod.descuento / 100),
-          subtotal: prod.subtotal,
-          producto_id: prod.id,
-        };
-
-        return axios.patch(`http://arcaweb.test/api/V1/detpromociones/${prod.detalle_id}`, detallePromocionActualizado, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-      });
-
-      await Promise.all(updateDetallesPromises);
-      await fetchPromocionesData(); // Actualizar la lista de promociones
-      handleCloseEditPromocionModal();
-    } else {
-      console.error('Error al editar la promoción:', response.data);
-    }
-  } catch (error) {
-    console.error('Error al editar la promoción:', error.response ? error.response.data : error.message);
-  }
-};
+  
+  
 
 
 
@@ -281,19 +285,7 @@ const handleEditPromocionSubmit = async (event) => {
 
   const handleDeletePromocion = async () => {
     try {
-      // Eliminar detalles de la promoción primero
-      const deleteDetallesPromises = selectedPromocion.detpromociones.map((detalle) => {
-        return axios.delete(`http://arcaweb.test/api/V1/detpromociones/${detalle.id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-      });
-
-      await Promise.all(deleteDetallesPromises); // Esperar a que todos los detalles se eliminen
-
-      // Luego eliminar la promoción
+      //  eliminar la promoción
       const response = await axios.delete(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,

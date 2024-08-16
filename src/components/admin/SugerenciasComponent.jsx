@@ -132,7 +132,7 @@ const styles = {
       });
 
       if (response.status === 200) {
-        setSugerenciasData(sugerenciasData.map(sugerencia => sugerencia.id === editedSugerenciaData.id ? response.data.data : sugerencia));
+        setSugerenciasData(sugerenciasData.map(sugerencia => sugerencia.id === editedSugerenciaData.id ? response.data : sugerencia));
         handleCloseEditSugerenciaModal();
       } else {
         console.error('Error al editar la Sugerencia:', response.data);
