@@ -8,6 +8,9 @@ import {
 import { Visibility, Edit, Delete, Add } from '@mui/icons-material';
 import { MyContext } from '../../services/MyContext';
 
+
+const END_POINT = "http://arcaweb.test/api/V1";
+
 // Estilos para el componente
 const styles = {
   mainBox: {
@@ -61,7 +64,7 @@ const PromocionesComponent = ({ searchQuery }) => {
     }
 
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/promociones?included=detpromociones.producto', {
+      const response = await axios.get(`${END_POINT}/promociones?included=detpromociones.producto`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -81,7 +84,7 @@ const PromocionesComponent = ({ searchQuery }) => {
   // Función para obtener los datos de los productos
   const fetchProductosData = async () => {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/productos', {
+      const response = await axios.get(`${END_POINT}/productos`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -172,6 +175,11 @@ const PromocionesComponent = ({ searchQuery }) => {
     ]);
   };
 
+  const handleRemoveProductRow = (index) => {
+    setProductosSeleccionados((prevState) => prevState.filter((_, i) => i !== index));
+  };
+  
+
   // Función para agregar una nueva promoción
   const handleAddPromocion = async (event) => {
     event.preventDefault();
@@ -183,7 +191,7 @@ const PromocionesComponent = ({ searchQuery }) => {
     };
     try {
       // Enviar la solicitud para crear la promoción principal
-      const response = await axios.post('http://arcaweb.test/api/V1/promociones', nuevaPromocion, {
+      const response = await axios.post(`${END_POINT}/promociones`, nuevaPromocion, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -209,7 +217,7 @@ const PromocionesComponent = ({ searchQuery }) => {
 
 
         
-        await axios.post('http://arcaweb.test/api/V1/detpromociones', { detalles }, {
+        await axios.post(`${END_POINT}/detpromociones`, { detalles }, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -240,7 +248,7 @@ const PromocionesComponent = ({ searchQuery }) => {
   
     try {
       // Enviar la solicitud para actualizar la promoción principal
-      const responsePromocion = await axios.put(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`, promocionActualizada, {
+      const responsePromocion = await axios.put(`${END_POINT}/promociones/${selectedPromocion.id}`, promocionActualizada, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -249,26 +257,29 @@ const PromocionesComponent = ({ searchQuery }) => {
   
       if (responsePromocion.status === 200) {
         const detalles = productosSeleccionados.map((prod) => ({
-          id: prod.detalle_id, // Debe ser el ID correcto del detalle
+          id: prod.detalle_id === undefined ? null : prod.detalle_id, // Debe ser el ID correcto del detalle
           cantidad: prod.cantidad,
           descuento: prod.descuento,
           subtotal: prod.subtotal,
           producto_id: prod.id,
         }));
-  
+
         // Crear un array de promesas para cada detalle
-        const updatePromises = detalles.map((detalle) => axios.put(`http://arcaweb.test/api/V1/detpromociones/${detalle.id}`, { detalles: [detalle] }, {
+        const updatePromocion = await axios.put(`${END_POINT}/detpromociones/${selectedPromocion.id}`, { detalles }, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-        }));
-  
+        });
+        if(updatePromocion.status === 200){
         // Esperar a que todas las promesas se resuelvan
-        await Promise.all(updatePromises);
-  
         await fetchPromocionesData(); // Actualizar la lista de promociones
-        handleCloseEditPromocionModal();
+        handleCloseEditPromocionModal()
+        }
+        else{
+          return (updatePromocion.response)
+        }
+        
       } else {
         console.error('Error al editar la promoción:', responsePromocion.data);
       }
@@ -286,7 +297,7 @@ const PromocionesComponent = ({ searchQuery }) => {
   const handleDeletePromocion = async () => {
     try {
       //  eliminar la promoción
-      const response = await axios.delete(`http://arcaweb.test/api/V1/promociones/${selectedPromocion.id}`, {
+      const response = await axios.delete(`${END_POINT}/promociones/${selectedPromocion.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -387,86 +398,93 @@ const PromocionesComponent = ({ searchQuery }) => {
       </TableContainer>
 
       {/* Modal para nueva promoción */}
-      <Modal open={isNewPromocionModalOpen} onClose={handleCloseNewPromocionModal}>
-        <Box style={styles.modal}>
-          <Typography variant="h6">Nueva Promoción</Typography>
-          <form onSubmit={handleAddPromocion}>
-            <TextField
-              id="nom_promo"
-              label="Nombre de la Promoción"
-              fullWidth
-              margin="normal"
-            />
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Producto</TableCell>
-                  <TableCell>Precio</TableCell>
-                  <TableCell>Cantidad</TableCell>
-                  <TableCell>Descuento (%)</TableCell>
-                  <TableCell>Subtotal</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {productosSeleccionados.map((producto, index) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      <Select
-                        value={producto.id}
-                        onChange={(e) => handleProductChange(index, 'id', e.target.value)}
-                        fullWidth
-                      >
-                        {productos.map((prod) => (
-                          <MenuItem key={prod.id} value={prod.id}>
-                            {prod.nom_producto}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        type="number"
-                        value={producto.precio_producto}
-                        onChange={(e) => handleProductChange(index, 'precio_producto', parseFloat(e.target.value))}
-                        disabled
-                        fullWidth
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        type="number"
-                        value={producto.cantidad}
-                        onChange={(e) => handleProductChange(index, 'cantidad', parseInt(e.target.value))}
-                        fullWidth
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        type="number"
-                        value={producto.descuento}
-                        onChange={(e) => handleProductChange(index, 'descuento', parseFloat(e.target.value))}
-                        fullWidth
-                      />
-                    </TableCell>
-                    <TableCell>{producto.subtotal.toFixed(2)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <Box sx={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-              <Button variant="outlined" onClick={handleAddProductRow} startIcon={<Add />}>
-                Añadir Producto
-              </Button>
-              <Box>
-                <Button onClick={handleCloseNewPromocionModal} sx={{ marginRight: 1 }}>Cancelar</Button>
-                <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
-                  Guardar
-                </Button>
-              </Box>
-            </Box>
-          </form>
+<Modal open={isNewPromocionModalOpen} onClose={handleCloseNewPromocionModal}>
+  <Box style={styles.modal}>
+    <Typography variant="h6">Nueva Promoción</Typography>
+    <form onSubmit={handleAddPromocion}>
+      <TextField
+        id="nom_promo"
+        label="Nombre de la Promoción"
+        fullWidth
+        margin="normal"
+      />
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Producto</TableCell>
+            <TableCell>Precio</TableCell>
+            <TableCell>Cantidad</TableCell>
+            <TableCell>Descuento (%)</TableCell>
+            <TableCell>Subtotal</TableCell>
+            <TableCell>Acciones</TableCell> {/* Nueva columna para acciones */}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {productosSeleccionados.map((producto, index) => (
+            <TableRow key={index}>
+              <TableCell>
+                <Select
+                  value={producto.id}
+                  onChange={(e) => handleProductChange(index, 'id', e.target.value)}
+                  fullWidth
+                >
+                  {productos.map((prod) => (
+                    <MenuItem key={prod.id} value={prod.id}>
+                      {prod.nom_producto}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </TableCell>
+              <TableCell>
+                <TextField
+                  type="number"
+                  value={producto.precio_producto}
+                  onChange={(e) => handleProductChange(index, 'precio_producto', parseFloat(e.target.value))}
+                  disabled
+                  fullWidth
+                />
+              </TableCell>
+              <TableCell>
+                <TextField
+                  type="number"
+                  value={producto.cantidad}
+                  onChange={(e) => handleProductChange(index, 'cantidad', parseInt(e.target.value))}
+                  fullWidth
+                />
+              </TableCell>
+              <TableCell>
+                <TextField
+                  type="number"
+                  value={producto.descuento}
+                  onChange={(e) => handleProductChange(index, 'descuento', parseFloat(e.target.value))}
+                  fullWidth
+                />
+              </TableCell>
+              <TableCell>{producto.subtotal.toFixed(2)}</TableCell>
+              <TableCell>
+                <IconButton onClick={() => handleRemoveProductRow(index)}>
+                  <Delete />
+                </IconButton>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <Box sx={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
+        <Button variant="outlined" onClick={handleAddProductRow} startIcon={<Add />}>
+          Añadir Producto
+        </Button>
+        <Box>
+          <Button onClick={handleCloseNewPromocionModal} sx={{ marginRight: 1 }}>Cancelar</Button>
+          <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
+            Guardar
+          </Button>
         </Box>
-      </Modal>
+      </Box>
+    </form>
+  </Box>
+</Modal>
+
 
       {/* Modal para visualizar promoción */}
       <Modal open={isViewPromocionModalOpen} onClose={handleCloseViewPromocionModal}>
@@ -508,85 +526,92 @@ const PromocionesComponent = ({ searchQuery }) => {
       </Modal>
 
       {/* Modal para editar promoción */}
-      <Modal open={isEditPromocionModalOpen} onClose={handleCloseEditPromocionModal}>
-        <Box style={styles.modal}>
-          <Typography variant="h6">Editar Promoción</Typography>
-          {selectedPromocion && (
-            <form onSubmit={handleEditPromocionSubmit}>
-              <TextField
-                id="nom_promo"
-                label="Nombre de la Promoción"
-                defaultValue={selectedPromocion.nom_promo}
-                fullWidth
-                margin="normal"
-              />
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Producto</TableCell>
-                    <TableCell>Precio</TableCell>
-                    <TableCell>Cantidad</TableCell>
-                    <TableCell>Descuento (%)</TableCell>
-                    <TableCell>Subtotal</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {productosSeleccionados.map((producto, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Select
-                          value={producto.id}
-                          onChange={(e) => handleProductChange(index, 'id', e.target.value)}
-                        >
-                          {productos.map((prod) => (
-                            <MenuItem key={prod.id} value={prod.id}>
-                              {prod.nom_producto}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <TextField
-                          type="number"
-                          value={producto.precio_producto}
-                          onChange={(e) => handleProductChange(index, 'precio_producto', parseFloat(e.target.value))}
-                          disabled
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <TextField
-                          type="number"
-                          value={producto.cantidad}
-                          onChange={(e) => handleProductChange(index, 'cantidad', parseInt(e.target.value))}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <TextField
-                          type="number"
-                          value={producto.descuento}
-                          onChange={(e) => handleProductChange(index, 'descuento', parseFloat(e.target.value))}
-                        />
-                      </TableCell>
-                      <TableCell>{producto.subtotal.toFixed(2)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <Box sx={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-                <Button variant="outlined" onClick={handleAddProductRow} startIcon={<Add />}>
-                  Añadir Producto
-                </Button>
-                <Box>
-                  <Button onClick={handleCloseEditPromocionModal} sx={{ marginRight: 1 }}>Cancelar</Button>
-                  <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
-                    Guardar
-                  </Button>
-                </Box>
-              </Box>
-            </form>
-          )}
+<Modal open={isEditPromocionModalOpen} onClose={handleCloseEditPromocionModal}>
+  <Box style={styles.modal}>
+    <Typography variant="h6">Editar Promoción</Typography>
+    {selectedPromocion && (
+      <form onSubmit={handleEditPromocionSubmit}>
+        <TextField
+          id="nom_promo"
+          label="Nombre de la Promoción"
+          defaultValue={selectedPromocion.nom_promo}
+          fullWidth
+          margin="normal"
+        />
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Producto</TableCell>
+              <TableCell>Precio</TableCell>
+              <TableCell>Cantidad</TableCell>
+              <TableCell>Descuento (%)</TableCell>
+              <TableCell>Subtotal</TableCell>
+              <TableCell>Acciones</TableCell> {/* Nueva columna para acciones */}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {productosSeleccionados.map((producto, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <Select
+                    value={producto.id}
+                    onChange={(e) => handleProductChange(index, 'id', e.target.value)}
+                  >
+                    {productos.map((prod) => (
+                      <MenuItem key={prod.id} value={prod.id}>
+                        {prod.nom_producto}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    type="number"
+                    value={producto.precio_producto}
+                    onChange={(e) => handleProductChange(index, 'precio_producto', parseFloat(e.target.value))}
+                    disabled
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    type="number"
+                    value={producto.cantidad}
+                    onChange={(e) => handleProductChange(index, 'cantidad', parseInt(e.target.value))}
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    type="number"
+                    value={producto.descuento}
+                    onChange={(e) => handleProductChange(index, 'descuento', parseFloat(e.target.value))}
+                  />
+                </TableCell>
+                <TableCell>{producto.subtotal.toFixed(2)}</TableCell>
+                <TableCell>
+                  <IconButton onClick={() => handleRemoveProductRow(index)}>
+                    <Delete />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <Box sx={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
+          <Button variant="outlined" onClick={handleAddProductRow} startIcon={<Add />}>
+            Añadir Producto
+          </Button>
+          <Box>
+            <Button onClick={handleCloseEditPromocionModal} sx={{ marginRight: 1 }}>Cancelar</Button>
+            <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
+              Guardar
+            </Button>
+          </Box>
         </Box>
-      </Modal>
+      </form>
+    )}
+  </Box>
+</Modal>
+
 
       {/* Diálogo para confirmar eliminación */}
       <Dialog open={isDeletePromocionDialogOpen} onClose={handleCloseDeletePromocionesDialog}>

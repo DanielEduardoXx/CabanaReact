@@ -3,10 +3,12 @@ import axios from 'axios';
 import {
   Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Modal, TextField, IconButton, Dialog, DialogTitle, DialogContent,
-  DialogContentText, DialogActions
+  DialogContentText, DialogActions, Select, MenuItem
 } from '@mui/material';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
 import { MyContext } from '../../services/MyContext';
+
+const END_POINT = "http://arcaweb.test/api/V1";
 
 const styles = {
   mainBox: {
@@ -49,7 +51,7 @@ const VentasComponent = ({ searchQuery }) => {
   const fetchVentasData = async () => {
     if (user) {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/ventaProceso', {
+      const response = await axios.get(`${END_POINT}/ventaProceso`, {
         headers: { 'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json' 
       }
@@ -69,7 +71,7 @@ const VentasComponent = ({ searchQuery }) => {
 
   const fetchDetVentaData = async (ventaId) => {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/detventas', {
+      const response = await axios.get(`${END_POINT}/detventas`, {
         headers: { 'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json' 
       }
@@ -111,7 +113,7 @@ const VentasComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.post('http://arcaweb.test/api/V1/ventas', newventaData, {
+      const response = await axios.post(`${END_POINT}/ventas`, newventaData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json' 
@@ -140,7 +142,7 @@ const VentasComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.put(`http://arcaweb.test/api/V1/ventas/${selectedVenta.id}`, editedVentaData, {
+      const response = await axios.put(`${END_POINT}/detventas/${selectedVenta.id}`, editedVentaData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json' 
@@ -160,7 +162,7 @@ const VentasComponent = ({ searchQuery }) => {
 
   const handleDeleteVenta = async () => {
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/ventas/${selectedVenta.id}`, {
+      const response = await axios.delete(`${END_POINT}/detventas/${selectedVenta.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`    
         }
@@ -272,7 +274,14 @@ const VentasComponent = ({ searchQuery }) => {
           <Typography variant="h6">Nueva Venta</Typography>
           <form onSubmit={handleAddventa}>
             <TextField name="user_id" label="Id Usuario" fullWidth margin="normal" />
-            <TextField name="metodo_pago" label="Metodo Pago" fullWidth margin="normal" />
+           
+            <Select id="metodo_pago" name="metodo_pago" fullWidth margin="normal" >
+                  <MenuItem defaultValue ="Efectivo" value="Efectivo">Efectivo</MenuItem>
+                  <MenuItem value="T_credito">tarjeta de credito</MenuItem>
+                  <MenuItem value="Nequi">Nequi</MenuItem> 
+                                
+            </Select>
+            
             <TextField name="total" label="Total" fullWidth margin="normal" />
             <TextField name="estado" label="Estado" fullWidth margin="normal" />
             <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
@@ -357,9 +366,16 @@ const VentasComponent = ({ searchQuery }) => {
             <form onSubmit={handleEditVentaSubmit}>
               <TextField name="created_at" label="Fecha" fullWidth margin="normal" defaultValue={selectedVenta.created_at} />
               <TextField name="user_id" label="Cédula" fullWidth margin="normal" defaultValue={selectedVenta.user_id} />
-              <TextField name="metodo_pago" label="Metodo Pago" fullWidth margin="normal" defaultValue={selectedVenta.metodo_pago} />
+             
+              <Select id="metodo_pago" name="metodo_pago" fullWidth margin="normal" defaultValue={selectedVenta.metodo_pago}>
+                  <MenuItem value="Efectivo">Efectivo</MenuItem>
+                  <MenuItem value="T_credito">tarjeta de credito</MenuItem>
+                  <MenuItem value="Nequi">Nequi</MenuItem>                
+              </Select>
               <TextField name="total" label="Total" fullWidth margin="normal" defaultValue={selectedVenta.total} />
-              <TextField name="estado" label="Estado" fullWidth margin="normal" defaultValue={selectedVenta.estado} />
+              <Select id="estado" name="estado" fullWidth margin="normal" defaultValue={selectedVenta.estado}>
+                  <MenuItem value="Completado">Completado</MenuItem>                 
+              </Select>             
               <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
                 <Button onClick={handleCloseEditVentaModal} sx={{ marginRight: 1 }}>Cancelar</Button>
                 <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>

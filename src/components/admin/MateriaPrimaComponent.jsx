@@ -8,6 +8,8 @@ import {
 import { Visibility, Edit, Delete } from '@mui/icons-material';
 import { MyContext } from '../../services/MyContext';
 
+const END_POINT = "http://arcaweb.test/api/V1";
+
 const styles = {
   mainBox: {
     padding: '1rem',
@@ -51,7 +53,7 @@ const MateriaPrimaComponent = ({ searchQuery }) => {
   const fetchMateriaPrimaData = async () => {
     if (user) {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/matprimas', {
+      const response = await axios.get(`${END_POINT}/matprimas`, {
         headers: { 'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json' 
       }
@@ -103,7 +105,7 @@ const MateriaPrimaComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.post('http://arcaweb.test/api/V1/matprimas', newMateriaPrimaData, {
+      const response = await axios.post(`${END_POINT}/matprimas`, newMateriaPrimaData, {
         headers: { 'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json' 
         }
@@ -138,7 +140,7 @@ const MateriaPrimaComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.put(`http://arcaweb.test/api/V1/matprimas/${selectedMateriaPrima.id}`, editedMateriaPrimaData, {
+      const response = await axios.put(`${END_POINT}/matprimas/${selectedMateriaPrima.id}`, editedMateriaPrimaData, {
         headers: { 'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json' 
         }
@@ -157,7 +159,7 @@ const MateriaPrimaComponent = ({ searchQuery }) => {
 
   const handleDeleteMateriaPrima = async () => {
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/matprimas/${selectedMateriaPrima.id}`, {
+      const response = await axios.delete(`${END_POINT}/matprimas/${selectedMateriaPrima.id}`, {
         headers: { 'Authorization': `Bearer ${token}`,
          }
       });

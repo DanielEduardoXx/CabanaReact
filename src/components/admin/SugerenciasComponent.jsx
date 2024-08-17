@@ -2,12 +2,13 @@ import React, { useState, useEffect, useContext } from 'react';
 import {
   Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Modal, TextField, IconButton, Dialog, DialogTitle, 
-  DialogContent, DialogContentText, DialogActions
+  DialogContent, DialogContentText, DialogActions, Select, MenuItem
 } from '@mui/material';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
 import { MyContext } from '../../services/MyContext';
 
+const END_POINT = "http://arcaweb.test/api/V1";
 
 const styles = {
   mainBox: {
@@ -49,7 +50,7 @@ const styles = {
   const fetchSugerenciasData = async () => {
     if (user) {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/pqrs', {
+      const response = await axios.get(`${END_POINT}/pqrs`, {
         headers: { 'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json' 
       }
@@ -80,7 +81,7 @@ const styles = {
     );
   }, [searchQuery, sugerenciasData]);
 
-  const handleAddSugerencia = async (event) => {
+  /*const handleAddSugerencia = async (event) => {
     event.preventDefault();
     const newSugerenciaData = {
      
@@ -91,7 +92,7 @@ const styles = {
     };
 
     try {
-      const response = await axios.post('http://arcaweb.test/api/V1/pqrs', newSugerenciaData, {
+      const response = await axios.post(`${END_POINT}/pqrs`, newSugerenciaData, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'  
@@ -108,7 +109,7 @@ const styles = {
     } catch (error) {
       console.error('Error al agregar la Sugerencia:', error.response ? error.response.data : error.message);
     }
-  };
+  };*/
 
 
 
@@ -124,7 +125,7 @@ const styles = {
     };
 
     try {
-      const response = await axios.patch(`http://arcaweb.test/api/V1/pqrs/${selectedSugerencia.id}`, editedSugerenciaData, {
+      const response = await axios.patch(`${END_POINT}/pqrs/${selectedSugerencia.id}`, editedSugerenciaData, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'  
@@ -146,7 +147,7 @@ const styles = {
     if (!selectedSugerencia) return;
 
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/pqrs/${selectedSugerencia.id}`, {
+      const response = await axios.delete(`${END_POINT}/pqrs/${selectedSugerencia.id}`, {
         headers: { 
           'Authorization': `Bearer ${token}`           
         }
@@ -162,9 +163,9 @@ const styles = {
     }
   };
 
-  const handleOpenNewSugerenciaModal = () => setIsNewSugerenciasModalOpen(true);
+  /*const handleOpenNewSugerenciaModal = () => setIsNewSugerenciasModalOpen(true);*/
 
-  const handleCloseNewSugerenciaModal = () => {setIsNewSugerenciasModalOpen(false); fetchSugerenciasData();}
+  /*const handleCloseNewSugerenciaModal = () => {setIsNewSugerenciasModalOpen(false); fetchSugerenciasData();}*/
 
 
   
@@ -191,11 +192,11 @@ const styles = {
       <Box sx={styles.subBox}>
         <Typography variant="h6">Sugerencias</Typography>
       </Box>
-      <Box sx={styles.subBox}>
-        <Button variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }} onClick={handleOpenNewSugerenciaModal}>
+     {/* <Box sx={styles.subBox}>
+        <Button variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }} >
           Nuevo
         </Button>
-      </Box>
+      </Box>*/}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -235,23 +236,27 @@ const styles = {
 
 
 
-      <Modal open={isNewSugerenciasModalOpen} onClose={handleCloseNewSugerenciaModal}>
-        <Box sx={styles.modal}>
-          <Typography variant="h6">Nueva Sugerencia</Typography>
-          <form onSubmit={handleAddSugerencia}>
-            <TextField id="sugerencia" label="Sugerencia" fullWidth margin="normal" />
-            <TextField id="tipo_suge" label="Tipo Sugerencia" fullWidth margin="normal" />
-            <TextField id="estado" label="Estado" fullWidth margin="normal" />
-            <TextField id="user_id" label="ID Usuario" fullWidth margin="normal" />
-            <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
-              <Button onClick={handleCloseNewSugerenciaModal} sx={{ marginRight: 1 }}>Cancelar</Button>
-              <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
-                Guardar
-              </Button>
-            </Box>
-          </form>
-        </Box>
-      </Modal>
+   {/*  <Modal open={isNewSugerenciasModalOpen} onClose={handleCloseNewSugerenciaModal}>
+  <Box sx={styles.modal}>
+    <Typography variant="h6">Nueva Sugerencia</Typography>
+    <form onSubmit={handleAddSugerencia}>
+      <TextField id="sugerencia" label="Sugerencia" fullWidth margin="normal" />
+      <TextField id="tipo_suge" label="Tipo Sugerencia" fullWidth margin="normal" />
+      <Select id="estado" name="estado" fullWidth margin="normal" defaultValue="en proceso">
+        <MenuItem value="en proceso">En Proceso</MenuItem>
+        <MenuItem value="resuelta">Resuelta</MenuItem>
+      </Select>
+      <TextField id="user_id" label="ID Usuario" fullWidth margin="normal" />
+      <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
+        <Button onClick={handleCloseNewSugerenciaModal} sx={{ marginRight: 1 }}>Cancelar</Button>
+        <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
+          Guardar
+        </Button>
+      </Box>
+    </form>
+  </Box>
+</Modal>*/}
+
 
 
       <Modal open={isViewSugerenciasModalOpen} onClose={handleCloseViewSugerenciaModal}>
@@ -274,24 +279,28 @@ const styles = {
 
 
       <Modal open={isEditSugerenciasModalOpen} onClose={handleCloseEditSugerenciaModal}>
-        <Box sx={styles.modal}>
-          <Typography variant="h6">Editar Sugerencia</Typography>
-          {selectedSugerencia && (
-            <form onSubmit={handleEditSugerenciaSubmit}>
-              <TextField id="sugerencia" label="Sugerencia" fullWidth margin="normal" defaultValue={selectedSugerencia.sugerencia} disabled />
-              <TextField id="tipo_suge"label="Tipo Sugerencia" fullWidth margin="normal" defaultValue={selectedSugerencia.tipo_suge} disabled />
-              <TextField id="estado"label="Estado" fullWidth margin="normal" defaultValue={selectedSugerencia.estado} />
-              <TextField id="user_id"label="Id Usuario" fullWidth margin="normal" defaultValue={selectedSugerencia.user_id} disabled/>
-              <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
-                <Button onClick={handleCloseEditSugerenciaModal} sx={{ marginRight: 1 }}>Cancelar</Button>
-                <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
-                  Guardar
-                </Button>
-              </Box>
-            </form>
-          )}
+  <Box sx={styles.modal}>
+    <Typography variant="h6">Editar Sugerencia</Typography>
+    {selectedSugerencia && (
+      <form onSubmit={handleEditSugerenciaSubmit}>
+        <TextField id="sugerencia" label="Sugerencia" fullWidth margin="normal" defaultValue={selectedSugerencia.sugerencia} disabled />
+        <TextField id="tipo_suge" label="Tipo Sugerencia" fullWidth margin="normal" defaultValue={selectedSugerencia.tipo_suge} disabled />
+        <Select id="estado" name="estado" fullWidth margin="normal" defaultValue={selectedSugerencia.estado}>
+          <MenuItem value="en proceso">En Proceso</MenuItem>
+          <MenuItem value="resuelta">Resuelta</MenuItem>
+        </Select>
+        <TextField id="user_id" label="Id Usuario" fullWidth margin="normal" defaultValue={selectedSugerencia.user_id} disabled/>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
+          <Button onClick={handleCloseEditSugerenciaModal} sx={{ marginRight: 1 }}>Cancelar</Button>
+          <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
+            Guardar
+          </Button>
         </Box>
-      </Modal>
+      </form>
+    )}
+  </Box>
+</Modal>
+
 
 
 

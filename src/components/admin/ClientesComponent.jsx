@@ -8,6 +8,8 @@ import { Visibility, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
 import { MyContext } from '../../services/MyContext';
 
+const END_POINT = "http://arcaweb.test/api/V1";
+
 const styles = {
   mainBox: {
     padding: '1rem',
@@ -51,7 +53,7 @@ const styles = {
   const fetchClientesData = async () => {
     if (user) {
       try {
-        const response = await axios.get('http://arcaweb.test/api/V1/users', {
+        const response = await axios.get(`${END_POINT}/users`, {
           headers: { 'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json' }
         });
@@ -105,7 +107,7 @@ const styles = {
     };
 
     try {
-      const response = await axios.post('http://arcaweb.test/api/V1/users', newClienteData, {
+      const response = await axios.post(`${END_POINT}/users`, newClienteData, {
         headers: {
            'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -141,7 +143,7 @@ const styles = {
     };
 
     try {
-      const response = await axios.patch(`http://arcaweb.test/api/V1/users/${selectedCliente.id}`, editedClienteData, {
+      const response = await axios.patch(`${END_POINT}/users/${selectedCliente.id}`, editedClienteData, {
         headers: {
           
           'Authorization': `Bearer ${token}`,
@@ -166,7 +168,7 @@ const styles = {
  // Función para eliminar  un cliente
   const handleDeleteCliente = async () => {
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/clientes/${selectedCliente.id}`, {
+      const response = await axios.delete(`${END_POINT}/clientes/${selectedCliente.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
        
       });

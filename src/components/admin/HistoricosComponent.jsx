@@ -7,6 +7,8 @@ TableHead, TableRow, Modal, TextField, IconButton
 import { Visibility } from '@mui/icons-material';
 import { MyContext } from '../../services/MyContext';
 
+const END_POINT = "http://arcaweb.test/api/V1";
+
 // Estilos para el componente
 const styles = {
 mainBox: {
@@ -50,7 +52,7 @@ console.log("hola ",token);
 const fetchVentasData = async () => {
 if (user) {
 try {
-const response = await axios.get('http://arcaweb.test/api/V1/ventaCompletado', {
+const response = await axios.get(`${END_POINT}/ventaCompletado`, {
   headers: { 'Authorization': `Bearer ${token}`,
   'Content-Type': 'application/json' 
 }

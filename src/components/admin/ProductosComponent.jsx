@@ -8,6 +8,8 @@ import {
 import { Visibility, Edit, Delete } from '@mui/icons-material';
 import { MyContext } from '../../services/MyContext';
 
+const END_POINT = "http://arcaweb.test/api/V1";
+
 // Estilos para el componente
 const styles = {
   mainBox: {
@@ -55,7 +57,7 @@ const styles = {
   const fetchProductosData = async () => {
     if (user) {
       try {
-        const response = await axios.get('http://arcaweb.test/api/V1/productos', {
+        const response = await axios.get(`${END_POINT}/productos`, {
           headers: { 'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json' 
         }
@@ -77,7 +79,7 @@ const styles = {
 const fetchCategoriasData = async () => {
     if (user) {
     try {
-      const response = await axios.get('http://arcaweb.test/api/V1/categorias', {
+      const response = await axios.get(`${END_POINT}/categorias`, {
         headers: { 'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json' 
       }
@@ -128,7 +130,7 @@ const fetchCategoriasData = async () => {
     };
 
     try {
-      const response = await axios.post('http://arcaweb.test/api/V1/productos', newProductosData, {
+      const response = await axios.post(`${END_POINT}/productos`, newProductosData, {
         
           headers: { 'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -160,7 +162,7 @@ const fetchCategoriasData = async () => {
     };
 
     try {
-      const response = await axios.patch(`http://arcaweb.test/api/V1/productos/${selectedProducto.id}`, editedProductosData, {
+      const response = await axios.patch(`${END_POINT}/productos/${selectedProducto.id}`, editedProductosData, {
         headers: { 'Authorization': `Bearer ${token}`,
                    'Content-Type': 'application/json'
         }
@@ -180,7 +182,7 @@ const fetchCategoriasData = async () => {
   // Función para eliminar un producto
   const handleDeleteProducto = async () => {
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/productos/${selectedProducto.id}`, {
+      const response = await axios.delete(`${END_POINT}/productos/${selectedProducto.id}`, {
         headers: { 'Authorization': `Bearer ${token}`,
          }
       });

@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import {
   Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Modal, TextField, IconButton, Dialog, DialogTitle, 
+  TableHead, TableRow, Modal, TextField, IconButton, Dialog, DialogTitle,
   DialogContent, DialogContentText, DialogActions
 } from '@mui/material';
 import { Visibility, Edit, Delete } from '@mui/icons-material';
 import axios from 'axios';
 import { MyContext } from '../../services/MyContext';
 
+
+const END_POINT = "http://arcaweb.test/api/V1";
 
 
 const styles = {
@@ -35,6 +37,8 @@ const styles = {
 const CategoriasComponent = ({ searchQuery }) => {
   const { user } = useContext(MyContext);
   const [categoriasData, setCategoriasData] = useState([]);
+  const [productosData, setProductosData] = useState([]);
+  const [productosPorCategoria, setProductosPorCategoria] = useState([]);
   const [filteredCategoriasData, setFilteredCategoriasData] = useState([]);
   const [isNewCategoriasModalOpen, setIsNewCategoriasModalOpen] = useState(false);
   const [isViewCategoriasModalOpen, setIsViewCategoriasModalOpen] = useState(false);
@@ -42,37 +46,51 @@ const CategoriasComponent = ({ searchQuery }) => {
   const [isDeleteCategoriasDialogOpen, setIsDeleteCategoriasDialogOpen] = useState(false);
   const [selectedCategoria, setSelectedCategoria] = useState(null);
 
-  console.log(categoriasData);
-  const userSession=JSON.parse(sessionStorage.getItem('user'));
-  console.log( "userSession ",userSession);
+  const userSession = JSON.parse(sessionStorage.getItem('user'));
   const token = userSession?.token?.access_token;
-  console.log("hola ",token);
 
   const fetchCategoriasData = async () => {
     if (user) {
-    try {
-      const response = await axios.get('http://arcaweb.test/api/V1/categorias', {
-        headers: { 'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json' 
+      try {
+       
+        const response = await axios.get(`${END_POINT}/categorias`, {
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+        if (response.status === 200) {
+          setCategoriasData(response.data.data);
+        } else {
+          console.error('Datos de categorias no válidos:', response.data.data);
+        }
+      } catch (error) {
+        console.error('Error al obtener datos de categorias:', error);
       }
-      });
-      if (response.status === 200) {
-        setCategoriasData(response.data.data);
-      } else {
-        console.error('Datos de categorias no válidos:', response.data.data);
-      }
-    } catch (error) {
-      console.error('Error al obtener datos de categorias:', error);
+    } else {
+      console.error("Access token no disponible");
     }
-  } else {
-    console.error("Access token no disponible");
-  }
-};
+  };
 
-  
+  const fetchProductosData = async () => {
+    if (user) {
+      try {
+        const response = await axios.get(`${END_POINT}/productos`, {
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+        if (response.status === 200) {
+          setProductosData(response.data.data);
+        } else {
+          console.error('Datos de productos no válidos:', response.data.data);
+        }
+      } catch (error) {
+        console.error('Error al obtener datos de productos:', error);
+      }
+    } else {
+      console.error("Access token no disponible");
+    }
+  };
 
   useEffect(() => {
     fetchCategoriasData();
+    fetchProductosData();
   }, [user]);
 
   useEffect(() => {
@@ -91,9 +109,8 @@ const CategoriasComponent = ({ searchQuery }) => {
     };
 
     try {
-      const response = await axios.post('http://arcaweb.test/api/V1/categorias', newCategoriaData, {
-        headers: { 'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json' }
+      const response = await axios.post(`${END_POINT}/categorias`, newCategoriaData, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
 
       if (response.status === 201) {
@@ -111,15 +128,14 @@ const CategoriasComponent = ({ searchQuery }) => {
   const handleEditCategoriaSubmit = async (event) => {
     event.preventDefault();
     if (!selectedCategoria) return;
-    
+
     const editedCategoriaData = {
       nombre_cat: event.target.nombre_cat.value,
     };
 
     try {
-      const response = await axios.put(`http://arcaweb.test/api/V1/categorias/${selectedCategoria.id}`, editedCategoriaData, {
-        headers: { 'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json' }
+      const response = await axios.put(`${END_POINT}/categorias/${selectedCategoria.id}`, editedCategoriaData, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
 
       if (response.status === 200) {
@@ -137,9 +153,8 @@ const CategoriasComponent = ({ searchQuery }) => {
     if (!selectedCategoria) return;
 
     try {
-      const response = await axios.delete(`http://arcaweb.test/api/V1/categorias/${selectedCategoria.id}`, {
-        headers: { 'Authorization': `Bearer ${token}`,
-         }
+      const response = await axios.delete(`${END_POINT}/categorias/${selectedCategoria.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.status === 204 || response.status === 200) {
@@ -164,8 +179,12 @@ const CategoriasComponent = ({ searchQuery }) => {
 
   const handleViewCategoria = (categoria) => {
     setSelectedCategoria(categoria);
+    // Asegurarse de que se está filtrando por el atributo correcto
+    const productosFiltrados = productosData.filter(producto => producto.categoria_id === categoria.id);
+    setProductosPorCategoria(productosFiltrados);
     setIsViewCategoriasModalOpen(true);
   };
+  
 
   const handleCloseViewCategoriaModal = () => {
     setIsViewCategoriasModalOpen(false);
@@ -248,25 +267,36 @@ const CategoriasComponent = ({ searchQuery }) => {
       </Modal>
 
       <Modal open={isViewCategoriasModalOpen} onClose={handleCloseViewCategoriaModal}>
-        <Box sx={{ color: "black" }} style={styles.modal}>
-          <Typography variant="h6">Visualizar Categoria</Typography>
-          {selectedCategoria && (
-            <>
-              <Typography>Nombre: {selectedCategoria.nombre}</Typography>
-              <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
-                <Button onClick={handleCloseViewCategoriaModal} sx={{ marginRight: 1 }}>Cerrar</Button>
-              </Box>
-            </>
-          )}
+  <Box sx={{ color: "black" }} style={styles.modal}>
+    <Typography variant="h6">Visualizar Categoria</Typography>
+    {selectedCategoria && (
+      <>
+        <Typography>Nombre: {selectedCategoria.nombre}</Typography>
+        <Typography variant="h6" style={{ marginTop: '1rem' }}>Productos</Typography>
+        {productosPorCategoria.length > 0 ? (
+          <ul>
+            {productosPorCategoria.map((producto) => (
+              <li key={producto.id}>{producto.nom_producto}</li>
+            ))}
+          </ul>
+        ) : (
+          <Typography>No hay productos en esta categoría.</Typography>
+        )}
+        <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
+          <Button onClick={handleCloseViewCategoriaModal} sx={{ marginRight: 1 }}>Cerrar</Button>
         </Box>
-      </Modal>
+      </>
+    )}
+  </Box>
+</Modal>
+
 
       <Modal open={isEditCategoriasModalOpen} onClose={handleCloseEditCategoriaModal}>
         <Box style={styles.modal}>
           <Typography variant="h6">Editar Categoria</Typography>
           {selectedCategoria && (
             <form onSubmit={handleEditCategoriaSubmit}>
-              <TextField name="nombre_cat" label="Nombre" fullWidth margin="normal" defaultValue={selectedCategoria.nombre_cat} />
+              <TextField name="nombre" label="Nombre" fullWidth margin="normal" defaultValue={selectedCategoria.nombre} />
               <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
                 <Button onClick={handleCloseEditCategoriaModal} sx={{ marginRight: 1 }}>Cancelar</Button>
                 <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
