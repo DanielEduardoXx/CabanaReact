@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import {
-Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
-TableHead, TableRow, Modal, TextField, IconButton
+  Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, Modal, TextField, IconButton, 
 } from '@mui/material';
 import { Visibility } from '@mui/icons-material';
 import { MyContext } from '../../services/MyContext';
@@ -25,7 +25,7 @@ position: 'absolute',
 top: '50%',
 left: '50%',
 transform: 'translate(-50%, -50%)',
-width: '400px',
+width: '600px',
 backgroundColor: 'white',
 padding: '1rem',
 boxShadow: 24,
@@ -39,6 +39,7 @@ const [ventasData, setVentasData] = useState([]);
 const [filteredVentasData, setFilteredVentasData] = useState([]);
 const [isViewVentasModalOpen, setIsViewVentasModalOpen] = useState(false);
 const [selectedVenta, setSelectedVenta] = useState(null);
+const [detVenta, setDetVenta] = useState(null);
 const [startDate, setStartDate] = useState('');
 const [endDate, setEndDate] = useState('');
 const [totalVentas, setTotalVentas] = useState(0);
@@ -70,6 +71,29 @@ console.error('Error al obtener datos de ventas:', error);
 console.error("Access token no disponible");
 }
 };
+
+
+
+const fetchDetVentaData = async (ventaId) => {
+  try {
+    const response = await axios.get(`${END_POINT}/detventas`, {
+      headers: { 'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json' 
+    }
+    });
+    console.log('Datos de detalle de venta obtenidos de la API:', response.data);
+
+    if (response.status === 200) {
+      const filteredDetVenta = response.data.data.filter(det => det.venta_id === ventaId);
+      setDetVenta(filteredDetVenta);
+    } else {
+      console.error('Datos de detalle de venta no válidos:', response.data);
+    }
+  } catch (error) {
+    console.error('Error al obtener datos de detalle de venta:', error);
+  }
+};
+
 
 useEffect(() => {
 fetchVentasData();
@@ -109,13 +133,16 @@ console.log('Total de ventas:', total); // Añadir log
 };
 
 const handleViewVentas = (venta) => {
-setSelectedVenta(venta);
-setIsViewVentasModalOpen(true);
+  setSelectedVenta(venta);
+  fetchDetVentaData(venta.id); // Llamar a la función con el ID de la venta seleccionada
+  setIsViewVentasModalOpen(true);
 };
 
 const handleCloseViewVentasModal = () => {
-setIsViewVentasModalOpen(false);
+  setIsViewVentasModalOpen(false);
+  setDetVenta(null); // Limpiar el estado
 };
+
 
 return (
 <Box style={styles.mainBox}>
@@ -151,7 +178,7 @@ return (
   <TableContainer component={Paper}>
     <Table>
       <TableHead>
-        <TableRow>
+        <TableRow >
           <TableCell>Fecha</TableCell>
           <TableCell>ID Venta</TableCell>
           <TableCell>Cédula</TableCell>
@@ -185,23 +212,67 @@ return (
 
   {/* Modal para visualizar venta */}
   <Modal open={isViewVentasModalOpen} onClose={handleCloseViewVentasModal}>
-    <Box sx={{ color: "black" }} style={styles.modal}>
-      <Typography variant="h6">Información de la Venta</Typography>
-      {selectedVenta && (
-        <>
-          <Typography>Fecha: {selectedVenta.created_at}</Typography>
-          <Typography>Id Venta: {selectedVenta.id}</Typography>
-          <Typography>Cédula: {selectedVenta.user_id}</Typography>
-          <Typography>Metodo Pago: {selectedVenta.metodo_pago}</Typography>
-          <Typography>Total: {selectedVenta.total}</Typography>
-          <Typography>Estado: {selectedVenta.estado}</Typography>
-          <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
-            <Button onClick={handleCloseViewVentasModal}>Cerrar</Button>
-          </Box>
-        </>
-      )}
-    </Box>
-  </Modal>
+        <Box sx={{ color: "black" }} style={styles.modal}>
+          <Typography variant="h6">Información de la Venta</Typography>
+          {selectedVenta && (
+            <>
+              <TableContainer component={Paper} style={styles.tableContainer}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Fecha</TableCell>
+                      <TableCell>ID Venta</TableCell>
+                      <TableCell>Cédula</TableCell>
+                      <TableCell>Metodo Pago</TableCell>
+                      <TableCell>Total</TableCell>
+                      <TableCell>Estado</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>{selectedVenta.created_at}</TableCell>
+                      <TableCell>{selectedVenta.id}</TableCell>
+                      <TableCell>{selectedVenta.user_id}</TableCell>
+                      <TableCell>{selectedVenta.metodo_pago}</TableCell>
+                      <TableCell>{selectedVenta.total}</TableCell>
+                      <TableCell>{selectedVenta.estado}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              {detVenta && detVenta.length > 0 && (
+  <TableContainer component={Paper} style={styles.tableContainer}>
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableCell>Producto</TableCell>
+          <TableCell>Precio Producto</TableCell>
+          <TableCell>Cantidad</TableCell>
+          <TableCell>Subtotal</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {detVenta.map((detalle, index) => (
+          <TableRow key={index}>
+            <TableCell>{detalle.nom_producto}</TableCell>
+            <TableCell>{detalle.pre_producto}</TableCell>
+            <TableCell>{detalle.cantidad}</TableCell>
+            <TableCell>{detalle.subtotal}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </TableContainer>
+)}
+
+
+              <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
+                <Button onClick={handleCloseViewVentasModal}>Cerrar</Button>
+              </Box>
+            </>
+          )}
+        </Box>
+      </Modal>
 </Box>
 );
 };

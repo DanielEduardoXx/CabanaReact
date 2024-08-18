@@ -25,7 +25,7 @@ const styles = {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: '400px',
+    width: '600px',
     backgroundColor: 'white',
     padding: '1rem',
     boxShadow: 24,
