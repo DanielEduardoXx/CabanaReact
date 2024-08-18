@@ -14,16 +14,20 @@
   position:absolute;
 }*/
 .admin-app {
-  display: flex ;
-  flex-direction:column ;
-  position: relative ;
-  width: 1230px ;
-  height: 720px ;
-  margin-top:70px ;
-  margin-left:282px ;
-  align-content: center ;
-  place-items: center ;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 1230px;
+  height: 720px;
+  margin-top: 70px;
+  margin-left: 282px;
+  align-content: center;
+  place-items: center;
   min-width: 320px;
+  margin-bottom: 0; /* Añadir un margen inferior para evitar superposición con el footer */
+  overflow-y: auto; /* Habilitar scroll vertical */
+  padding-right: 1rem; /* Espacio para el scroll */
+  box-sizing: border-box; /* Asegura que padding y margen no incrementen el tamaño total */
 }
 
 a {
@@ -31,11 +35,10 @@ a {
   color: #646cff;
   text-decoration: inherit;
 }
+
 a:hover {
   color: #535bf2;
 }
-
-
 
 h1 {
   font-size: 3.2em;
@@ -53,9 +56,11 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
@@ -66,11 +71,12 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
   }
 }
-
