@@ -88,9 +88,33 @@ const CategoriasComponent = ({ searchQuery }) => {
     }
   };
 
+  const fetchPromocionesData = async () => {
+    if (user) {
+      try {
+        const response = await axios.get(`${END_POINT}/promociones`, {
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+        if (response.status === 200) {
+          return response.data.data;  // Devuelve las promociones obtenidas
+        } else {
+          console.error('Datos de promociones no válidos:', response.data.data);
+          return [];
+        }
+      } catch (error) {
+        console.error('Error al obtener datos de promociones:', error);
+        return [];
+      }
+    } else {
+      console.error("Access token no disponible");
+      return [];
+    }
+  };
+  
+
   useEffect(() => {
     fetchCategoriasData();
     fetchProductosData();
+    fetchPromocionesData();
   }, [user]);
 
   useEffect(() => {
@@ -177,11 +201,15 @@ const CategoriasComponent = ({ searchQuery }) => {
     fetchCategoriasData();
   };
 
-  const handleViewCategoria = (categoria) => {
+  const handleViewCategoria = async (categoria) => {
     setSelectedCategoria(categoria);
-    // Asegurarse de que se está filtrando por el atributo correcto
-    const productosFiltrados = productosData.filter(producto => producto.categoria_id === categoria.id);
-    setProductosPorCategoria(productosFiltrados);
+    if (categoria.id === 5) {  // Verifica si es la categoría de Promociones
+      const promocionesData = await fetchPromocionesData();
+      setProductosPorCategoria(promocionesData);  // Aquí se guardan las promociones en lugar de productos
+    } else {
+      const productosFiltrados = productosData.filter(producto => producto.categoria_id === categoria.id);
+      setProductosPorCategoria(productosFiltrados);
+    }
     setIsViewCategoriasModalOpen(true);
   };
   
@@ -275,8 +303,8 @@ const CategoriasComponent = ({ searchQuery }) => {
         <Typography variant="h6" style={{ marginTop: '1rem' }}>Productos</Typography>
         {productosPorCategoria.length > 0 ? (
           <ul>
-            {productosPorCategoria.map((producto) => (
-              <li key={producto.id}>{producto.nom_producto}</li>
+            {productosPorCategoria.map((item) => (
+              <li key={item.id}>{item.nom_producto || item.nom_promo}</li>
             ))}
           </ul>
         ) : (
