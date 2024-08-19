@@ -1,29 +1,40 @@
 import React, { useState, useContext } from 'react';
-import { AppBar, Toolbar, Box, Input, Button, Typography, Menu, MenuItem,  } from '@mui/material';
+import {
+  AppBar, Toolbar, Box, Input, Button, Typography, Menu, MenuItem, Dialog
+} from '@mui/material';
 import { MyContext } from '../../services/MyContext';
+import Profile from './Profile'; 
+import { useColorContext } from './ColorContext';
+
 
 const Header = ({ onSearch }) => {
+  const { colors } = useColorContext();
   const [anchorEl, setAnchorEl] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { user, setUser } = useContext(MyContext);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const handleAvatarClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleClose = () => {
+  const handleCloseMenu = () => {
     setAnchorEl(null);
   };
 
   const handleLogout = () => {
-    console.log('Cerrar sesión');
     setUser(null);
-    handleClose();
+    sessionStorage.removeItem('user');
+    handleCloseMenu();
   };
 
   const handleProfile = () => {
-    console.log('Perfil');
-    handleClose();
+    setIsProfileOpen(true);
+    handleCloseMenu();
+  };
+
+  const handleCloseProfile = () => {
+    setIsProfileOpen(false);
   };
 
   const handleSearchChange = (event) => {
@@ -35,80 +46,87 @@ const Header = ({ onSearch }) => {
   };
 
   return (
-    <AppBar
-      position="fixed"
-      sx={{
-        marginLeft: '250px',
-        width: 'calc(99.99% - 250px)',
-        backgroundColor: '#263491',
-      }}
-    >
-      <Toolbar
+    <>
+      <AppBar
+        position="fixed"
         sx={{
-          backgroundColor: '#263491',
-          marginLeft: '80px',
+          marginLeft: '250px',
+          width: 'calc(99.99% - 250px)',
+          backgroundColor: colors.header,
         }}
       >
-        <Box
+        <Toolbar
           sx={{
-            flexGrow: 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
+            backgroundColor: colors.header,
+            marginLeft: '80px',
           }}
         >
-          <Input
-            sx={{ background: '#fff', borderRadius: '4px', marginRight: '10px' }}
-            placeholder="Buscar..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-          />
-          <Button
-            sx={{ backgroundColor: '#E3C800' }}
-            variant="contained"
-            onClick={handleSearchClick}
-          >
-            Buscar
-          </Button>
-        </Box>
-
-        <Typography
-          sx={{
-            flexGrow: 0,
-            textAlign: 'center',
-          }}
-        >
-          Nombre del Admi
-        </Typography>
-
-        <Box
-          sx={{
-            padding: 'px',
-            cursor: 'pointer',
-          }}
-          onClick={handleAvatarClick}
-        >
-          <img
-            src="http:./public/pollo.png"
-            alt="Admin"
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
             }}
-          />
-        </Box>
+          >
+            <Input
+              sx={{ background: '#fff', borderRadius: '4px', marginRight: '10px' }}
+              placeholder="Buscar..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+            <Button
+              sx={{ backgroundColor: '#E3C800' }}
+              variant="contained"
+              onClick={handleSearchClick}
+            >
+              Buscar
+            </Button>
+          </Box>
 
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleClose}
-        >
-          <MenuItem onClick={handleProfile}>Perfil</MenuItem>
-          <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
-        </Menu>
-      </Toolbar>
-    </AppBar>
+          <Typography
+            sx={{
+              flexGrow: 0,
+              textAlign: 'center',
+            }}
+          >
+            {user?.user?.name || 'Nombre del Admin'}
+          </Typography>
+
+          <Box
+            sx={{
+              padding: 'px',
+              cursor: 'pointer',
+            }}
+            onClick={handleAvatarClick}
+          >
+            <img
+              src="http:./public/pollo.png"
+              alt="Admin"
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+              }}
+            />
+          </Box>
+
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleCloseMenu}
+          >
+            <MenuItem onClick={handleProfile}>Perfil</MenuItem>
+            <MenuItem onClick={handleLogout}>Cerrar sesión</MenuItem>
+          </Menu>
+        </Toolbar>
+      </AppBar>
+
+      {/* Modal para el perfil */}
+      <Dialog open={isProfileOpen} onClose={handleCloseProfile} maxWidth="sm" fullWidth>
+        <Profile open={isProfileOpen} onClose={handleCloseProfile} />
+      </Dialog>
+    </>
   );
 };
 

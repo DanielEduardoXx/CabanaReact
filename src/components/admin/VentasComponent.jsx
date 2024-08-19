@@ -276,9 +276,10 @@ const VentasComponent = ({ searchQuery }) => {
             <TextField name="user_id" label="Id Usuario" fullWidth margin="normal" />
            
             <Select id="metodo_pago" name="metodo_pago" fullWidth margin="normal" >
-                  <MenuItem defaultValue ="Efectivo" value="Efectivo">Efectivo</MenuItem>
-                  <MenuItem value="T_credito">tarjeta de credito</MenuItem>
-                  <MenuItem value="Nequi">Nequi</MenuItem> 
+                  <option disabled selected>Selecciona una opción</option>
+                  <option Value ="Efectivo" value="Efectivo">Efectivo</option>
+                  <option value="T_credito">tarjeta de credito</option>
+                  <option value="Nequi">Nequi</option> 
                                 
             </Select>
             

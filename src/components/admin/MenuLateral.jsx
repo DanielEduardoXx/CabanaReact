@@ -2,10 +2,13 @@
 import React, { useState } from 'react';
 import { Box, Button, Collapse, List, ListItem } from '@mui/material';
 import axios from 'axios';
+import { useColorContext } from './ColorContext';
 
 // Componente principal del menú lateral
 const MenuLateral = ({ onMenuClick }) => {
+
   // Estados para controlar la apertura de los submenús
+  const { colors } = useColorContext();
   const [openMenu2, setOpenMenu2] = useState(false);
   const [openMenu3, setOpenMenu3] = useState(false);
 
@@ -33,18 +36,19 @@ const MenuLateral = ({ onMenuClick }) => {
   return (
     <Box
       sx={{
-        height: '100vh',              // Altura del menú lateral
-        width: '250px',               // Ancho del menú lateral
-        backgroundColor: '#263491',   // Color de fondo del menú lateral
-        color: '#fff',                // Color del texto en el menú lateral
-        position: 'fixed',            // Posición fija
-        top: 0,                       // Posición en la parte superior
-        left: 0,                      // Posición a la izquierda
-        display: 'flex',              // Uso de flexbox
-        flexDirection: 'column',      // Dirección de los elementos en columna
-        alignItems: 'center',         // Alineación de los elementos al centro
-        padding: '16px',              // Espaciado interno
+        height: '100vh',
+        width: '250px',
+        backgroundColor: colors.sidebar,
+        color: '#fff',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '16px',
       }}
+    
     >
       {/* Logo del menú lateral */}
       <Box

@@ -1,7 +1,9 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import { useColorContext } from './ColorContext';
 
 const FooterAdmin = () => {
+  const { colors } = useColorContext();
   return (
     <Box
       sx={{
@@ -10,10 +12,11 @@ const FooterAdmin = () => {
         right: 0,
         marginLeft: '250px',
         width: 'calc(100% - 250px)',
-        backgroundColor: '#263491',
+        backgroundColor: colors.footer,
         textAlign: 'center',
         padding: '8px',
       }}
+    
     >
       <Typography sx={{ color: '#ffffff' }}>© Derechos Reservados</Typography>
     </Box>
