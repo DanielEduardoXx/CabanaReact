@@ -25,7 +25,7 @@ const ClienteMasVentasChart = () => {
   }, []);
 
   const config = {
-    data,
+    data,    
     xField: 'ventas',
     yField: 'cliente',
     seriesField: 'cliente',
