@@ -42,6 +42,9 @@ const VentasComponent = ({ searchQuery }) => {
   const [isDeleteVentasDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedVenta, setSelectedVenta] = useState(null);
   const [detVenta, setDetVenta] = useState(null);
+  const [productos, setProductos] = useState([]);
+  const [promociones, setPromociones] = useState([]);
+
 
   const userSession=JSON.parse(sessionStorage.getItem('user'));
   console.log( "userSession ",userSession);
@@ -89,8 +92,43 @@ const VentasComponent = ({ searchQuery }) => {
     }
   };
 
+  
+    const fetchProductos = async () => {
+      try {
+        const response = await axios.get(`${END_POINT}/producto`, {
+          headers: { 'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json' }
+        });
+        if (response.status === 200) {
+          setProductos(response.data.data);
+        } else {
+          console.error('Error al obtener productos:', response.data);
+        }
+      } catch (error) {
+        console.error('Error al obtener productos:', error);
+      }
+    };
+  
+    const fetchPromociones = async () => {
+      try {
+        const response = await axios.get(`${END_POINT}/promociones`, {
+          headers: { 'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json' }
+        });
+        if (response.status === 200) {
+          setPromociones(response.data.data);
+        } else {
+          console.error('Error al obtener promociones:', response.data);
+        }
+      } catch (error) {
+        console.error('Error al obtener promociones:', error);
+      }
+    };
+
   useEffect(() => {
     fetchVentasData();
+    fetchProductos();
+    fetchPromociones();
   }, []);
 
   useEffect(() => {
@@ -102,6 +140,10 @@ const VentasComponent = ({ searchQuery }) => {
       )
     );
   }, [searchQuery, ventasData]);
+
+
+
+  
 
   const handleAddventa = async (event) => {
     event.preventDefault();
@@ -276,7 +318,6 @@ const VentasComponent = ({ searchQuery }) => {
             <TextField name="user_id" label="Id Usuario" fullWidth margin="normal" />
            
             <Select id="metodo_pago" name="metodo_pago" fullWidth margin="normal" >
-                  <option disabled selected>Selecciona una opción</option>
                   <option Value ="Efectivo" value="Efectivo">Efectivo</option>
                   <option value="T_credito">tarjeta de credito</option>
                   <option value="Nequi">Nequi</option> 

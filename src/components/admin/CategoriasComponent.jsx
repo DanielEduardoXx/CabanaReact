@@ -2,9 +2,9 @@ import React, { useState, useEffect, useContext } from 'react';
 import {
   Paper, Box, Button, Typography, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Modal, TextField, IconButton, Dialog, DialogTitle,
-  DialogContent, DialogContentText, DialogActions
+  DialogContent, DialogContentText, DialogActions,Avatar, Input
 } from '@mui/material';
-import { Visibility, Edit, Delete } from '@mui/icons-material';
+import { Visibility, Edit, Delete, CameraAlt} from '@mui/icons-material';
 import axios from 'axios';
 import { MyContext } from '../../services/MyContext';
 
@@ -45,6 +45,8 @@ const CategoriasComponent = ({ searchQuery }) => {
   const [isEditCategoriasModalOpen, setIsEditCategoriasModalOpen] = useState(false);
   const [isDeleteCategoriasDialogOpen, setIsDeleteCategoriasDialogOpen] = useState(false);
   const [selectedCategoria, setSelectedCategoria] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [isImageUploadModalOpen, setIsImageUploadModalOpen] = useState(false);
 
   const userSession = JSON.parse(sessionStorage.getItem('user'));
   const token = userSession?.token?.access_token;
@@ -126,6 +128,17 @@ const CategoriasComponent = ({ searchQuery }) => {
     );
   }, [searchQuery, categoriasData]);
 
+  // Manejo de apertura y cierre de modales
+  const handleOpenImageUploadModal = (categoria) => {
+    setSelectedCategoria(categoria);
+    setIsImageUploadModalOpen(true);
+  };
+
+  const handleCloseImageUploadModal = () => {
+    setIsImageUploadModalOpen(false);
+    setImageFile(null);
+  };
+
   const handleAddCategoria = async (event) => {
     event.preventDefault();
     const newCategoriaData = {
@@ -192,6 +205,33 @@ const CategoriasComponent = ({ searchQuery }) => {
     }
   };
 
+
+  // Subida de imagen
+  const handleImageUpload = async () => {
+    if (!imageFile) return;
+
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    formData.append('imageable_type', 'categoria');
+    formData.append('imageable_id', selectedCategoria?.id || '');
+
+    try {
+      const response = await axios.post(`${END_POINT}/images`, formData, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (response.status === 201) {
+        console.log('Imagen cargada exitosamente');
+        setIsImageUploadModalOpen(false);
+        setImageFile(null);
+      } else {
+        console.error('Error al cargar la imagen:', response.data);
+      }
+    } catch (error) {
+      console.error('Error al cargar la imagen:', error.response ? error.response.data : error.message);
+    }
+  };
+
   const handleOpenNewCategoriaModal = () => {
     setIsNewCategoriasModalOpen(true);
   };
@@ -244,7 +284,7 @@ const CategoriasComponent = ({ searchQuery }) => {
         <Typography variant="h6">Categorias</Typography>
       </Box>
       <Box style={styles.subBox}>
-        <Button variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }} onClick={handleOpenNewCategoriaModal}>
+        <Button variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }} onClick={setIsNewCategoriasModalOpen}>
           Nuevo
         </Button>
       </Box>
@@ -252,9 +292,9 @@ const CategoriasComponent = ({ searchQuery }) => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>id</TableCell>
-              <TableCell>Nombre</TableCell>
-              <TableCell>Acciones</TableCell>
+              <TableCell sx={{ textAlign: 'center' }}>id</TableCell>
+              <TableCell sx={{ textAlign: 'center' }}>Nombre</TableCell>
+              <TableCell sx={{ textAlign: 'center' }}>Acciones</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -271,6 +311,9 @@ const CategoriasComponent = ({ searchQuery }) => {
                   </IconButton>
                   <IconButton onClick={() => handleOpenDeleteCategoriasDialog(categoria)}>
                     <Delete />
+                  </IconButton>
+                  <IconButton onClick={() => handleOpenImageUploadModal(categoria)}>
+                  <CameraAlt />
                   </IconButton>
                 </TableCell>
               </TableRow>
@@ -336,6 +379,33 @@ const CategoriasComponent = ({ searchQuery }) => {
         </Box>
       </Modal>
 
+      <Modal open={isImageUploadModalOpen} onClose={handleCloseImageUploadModal}>
+        <Box style={styles.modal}>
+          <Typography variant="h6">Subir Imagen</Typography>
+          {selectedCategoria && (
+            <>
+              <Avatar
+                sx={styles.avatar}
+                src={selectedCategoria.imageUrl || ""}
+                alt="Imagen de la categoría"
+              />
+              <Input type="file" accept="image/*" onChange={(event) => setImageFile(event.target.files[0])} />
+              <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
+                <Button onClick={handleCloseImageUploadModal} sx={{ marginRight: 1 }}>Cancelar</Button>
+                <Button
+                  variant="contained"
+                  sx={{ backgroundColor: "#E3C800", color: "#fff" }}
+                  onClick={handleImageUpload}
+                  disabled={!imageFile}
+                >
+                  Subir Imagen
+                </Button>
+              </Box>
+            </>
+          )}
+        </Box>
+      </Modal>
+
       <Dialog open={isDeleteCategoriasDialogOpen} onClose={handleCloseDeleteCategoriasDialog}>
         <DialogTitle>Confirma Eliminación</DialogTitle>
         <DialogContent>
@@ -351,6 +421,7 @@ const CategoriasComponent = ({ searchQuery }) => {
         </DialogActions>
       </Dialog>
     </Box>
+
   );
 };
 

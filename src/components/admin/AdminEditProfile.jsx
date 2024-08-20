@@ -22,7 +22,7 @@ const AdminEditProfile = ({ open, handleClose }) => {
     const handleSave = async () => {
         const userSession = JSON.parse(sessionStorage.getItem('user'));
         const token = userSession?.token?.access_token;
-
+    
         try {
             const response = await axios.put(
                 `${END_POINT}/users/${user.user.id}`,
@@ -34,9 +34,15 @@ const AdminEditProfile = ({ open, handleClose }) => {
                     },
                 }
             );
-
+    
             if (response.status === 200) {
-                setUser({ ...user, user: response.data });
+                // Actualiza el estado del usuario con los nuevos datos
+                const updatedUser = { ...user, user: { ...user.user, ...adminData } };
+                setUser(updatedUser);
+                
+                // Actualiza también la sesión del usuario
+                sessionStorage.setItem('user', JSON.stringify(updatedUser));
+                
                 handleClose(); // Cierra el diálogo de edición
             } else {
                 alert('No se pudo actualizar la información del administrador.');
