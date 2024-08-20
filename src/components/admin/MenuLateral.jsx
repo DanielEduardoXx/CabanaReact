@@ -77,6 +77,14 @@ const MenuLateral = ({ onMenuClick }) => {
           width: '100%',
         }}
       >
+        {/* Botón de Dashboard */}
+        <Button 
+          sx={buttonStyles}
+          onClick={() => onMenuClick('Dashboard')}
+        >
+         Dashboard
+        </Button>
+
         {/* Botón de Clientes */}
         <Button 
           sx={buttonStyles}

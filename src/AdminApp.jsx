@@ -10,6 +10,7 @@ import MateriaPrimaComponent from './components/admin/MateriaPrimaComponent';
 import ProductosComponent from './components/admin/ProductosComponent';
 import CategoriasComponent from './components/admin/CategoriasComponent';
 import SugerenciasComponent from './components/admin/SugerenciasComponent';
+import DashboardComponent from './components/admin/DashboardComponent';
 import FooterAdmin from './components/admin/FooterAdmin';
 import { MyProvider } from './services/MyProvider'; 
 import { ColorProvider } from './components/admin/ColorContext';
@@ -17,7 +18,7 @@ import AdminPanel from './components/admin/AdminPanel';
 import './index.css';
 
 const AdminApp = () => {
-  const [selectedComponent, setSelectedComponent] = useState('');
+  const [selectedComponent, setSelectedComponent] = useState('Dashboard');
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleMenuClick = (component) => {
@@ -37,6 +38,7 @@ const AdminApp = () => {
         <div className="main-layout">
           <MenuLateral onMenuClick={handleMenuClick} />
           <div className="content">
+            {selectedComponent === 'Dashboard' && <DashboardComponent />} 
             {selectedComponent === 'Clientes' && <ClientesComponent searchQuery={searchQuery} />}
             {selectedComponent === 'verificarVentas' && <VentasComponent searchQuery={searchQuery} />}
             {selectedComponent === 'Historico' && <HistoricosComponent searchQuery={searchQuery} />}
