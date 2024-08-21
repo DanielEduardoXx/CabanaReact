@@ -325,7 +325,6 @@ const VentasComponent = ({ searchQuery }) => {
             </Select>
             
             <TextField name="total" label="Total" fullWidth margin="normal" />
-            <TextField name="estado" label="Estado" fullWidth margin="normal" />
             <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
               <Button onClick={handleCloseNewVentaModal} sx={{ marginRight: 1 }}>Cancelar</Button>
               <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
