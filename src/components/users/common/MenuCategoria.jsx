@@ -20,11 +20,7 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
       try {
         const result = await allCategorias();
         if (isMounted) {
-          if (Array.isArray(result)) {
-            setData(result);
-          } else {
-            setData([]);
-          }
+          setData(Array.isArray(result) ? result : []);
           setLoading(false);
         }
       } catch (err) {
@@ -48,27 +44,52 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
   if (error) return <Typography>Error al cargar categorías</Typography>;
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-      <Box sx={{ display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap', padding: '1rem' }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0 1rem' }}>
-          <img src={`../../../../public/Hamburguesas.jpg`} alt={'imgTodos'} onClick={() => handleCategoriaClick(null)} style={{ width: '30px', height: '30px' }} />
+    <Box sx={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
+      <Box sx={{ display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap', padding: '1rem', gap: '1rem' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <img 
+            src={`../../../../public/Hamburguesas.jpg`} 
+            alt={'imgTodos'} 
+            onClick={() => handleCategoriaClick(null)} 
+            style={{ width: '40px', height: '40px', cursor: 'pointer' }} 
+          />
           <Typography>Todos</Typography>
         </Box>
         {data.map(item => (
-          <Box key={item.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '0 1rem' }}>
-            <img src={`${ruta}/${item.nombre}.jpg`} alt={item.nombre} onClick={() => handleCategoriaClick(item.id)} style={{ width: '30px', height: '30px' }} />
+          <Box key={item.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <img 
+              src={`${ruta}/${item.nombre}.jpg`} 
+              alt={item.nombre} 
+              onClick={() => handleCategoriaClick(item.id)} 
+              style={{ width: '40px', height: '40px', cursor: 'pointer' }} 
+            />
             <Typography>{item.nombre}</Typography>
           </Box>
         ))}
-        <IconButton aria-label="show cart items" color="inherit" onClick={handleModal} disabled={noCompras <= 0}>
-          <Badge badgeContent={noCompras} color="error">
-            <AddShoppingCartIcon sx={{ fontSize: 20 }} color="green" />
-          </Badge>
-        </IconButton>
       </Box>
+      <IconButton 
+        aria-label="show cart items" 
+        color="inherit" 
+        onClick={handleModal} 
+        disabled={noCompras <= 0}
+        sx={{
+          position: 'fixed',
+          bottom: '1rem',
+          right: '1rem',
+          backgroundColor: 'primary.main',
+          '&:hover': {
+            backgroundColor: 'primary.dark',
+          },
+          boxShadow: 3,
+          zIndex: 1000,
+        }}
+      >
+        <Badge badgeContent={noCompras} color="error">
+          <AddShoppingCartIcon sx={{ fontSize: 24, color: 'white' }} />
+        </Badge>
+      </IconButton>
     </Box>
   );
 }
-
 
 export default MenuCategoria;
