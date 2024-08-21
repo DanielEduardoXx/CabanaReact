@@ -148,20 +148,38 @@ const VentasComponent = ({ searchQuery }) => {
     );
   }, [searchQuery, ventasData]);
 
+  const calcularSubtotal = (precio, cantidad, descuento) => {
+    const descuentoMonto = (precio * cantidad) * (descuento / 100);
+    return (precio * cantidad) - descuentoMonto;
+  };
+
   const handleProductChange = (index, field, value) => {
-    const updatedProducts = [...productosSeleccionados];
-    updatedProducts[index][field] = value;
-    
-    // Recalcular el subtotal
-    const producto = updatedProducts[index];
-    const precioConDescuento = producto.precio_producto * (1 - producto.descuento / 100);
-    producto.subtotal = precioConDescuento * producto.cantidad;
-    
-    setProductosSeleccionados(updatedProducts);
-    
-    // Recalcular el total
-    const newTotal = updatedProducts.reduce((sum, prod) => sum + prod.subtotal, 0);
-    setTotal(newTotal);
+    setProductosSeleccionados((prevState) => {
+      const newState = [...prevState];
+      newState[index] = {
+        ...newState[index],
+        [field]: value,
+      };
+
+      if (field === 'id') {
+        const selectedProducto = productos.find(prod => prod.id === value);
+        newState[index].nom_producto = selectedProducto.nom_producto;
+        newState[index].precio_producto = selectedProducto.precio_producto;
+      }
+
+      if (field === 'cantidad' || field === 'descuento' || field === 'precio_producto') {
+        newState[index].subtotal = calcularSubtotal(
+          newState[index].precio_producto,
+          newState[index].cantidad,
+          newState[index].descuento
+        );
+      }
+
+      const nuevoTotal = newState.reduce((sum, prod) => sum + prod.subtotal, 0);
+      setTotal(nuevoTotal);
+
+      return newState;
+    });
   };
 
   const handleAddProductRow = () => {
@@ -399,8 +417,8 @@ const VentasComponent = ({ searchQuery }) => {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: '90%',
-    maxWidth: 1000,
+    width: '80%',
+    maxWidth: 800,
     bgcolor: 'background.paper',
     boxShadow: 24,
     p: 4,
@@ -446,7 +464,7 @@ const VentasComponent = ({ searchQuery }) => {
       </Select>
 
       <TableContainer component={Paper} sx={{ mb: 3 }}>
-        <Table size="small">
+        <Table>
           <TableHead>
             <TableRow>
               <TableCell>Producto</TableCell>
@@ -463,13 +481,7 @@ const VentasComponent = ({ searchQuery }) => {
                 <TableCell>
                   <Select
                     value={producto.id}
-                    onChange={(e) => {
-                      const selectedProduct = productos.find(p => p.id === e.target.value);
-                      handleProductChange(index, 'id', e.target.value);
-                      handleProductChange(index, 'precio_producto', selectedProduct.precio);
-                      handleProductChange(index, 'cantidad', 1);
-                      handleProductChange(index, 'descuento', 0);
-                    }}
+                    onChange={(e) => handleProductChange(index, 'id', e.target.value)}
                     fullWidth
                   >
                     {productos.map((prod) => (
@@ -483,30 +495,27 @@ const VentasComponent = ({ searchQuery }) => {
                   <TextField
                     type="number"
                     value={producto.precio_producto}
-                    onChange={(e) => handleProductChange(index, 'precio_producto', Math.max(0, parseFloat(e.target.value)))}
+                    onChange={(e) => handleProductChange(index, 'precio_producto', parseFloat(e.target.value))}
                     fullWidth
-                    InputProps={{ inputProps: { min: 0 } }}
                   />
                 </TableCell>
                 <TableCell>
                   <TextField
                     type="number"
                     value={producto.cantidad}
-                    onChange={(e) => handleProductChange(index, 'cantidad', Math.max(1, parseInt(e.target.value)))}
+                    onChange={(e) => handleProductChange(index, 'cantidad', parseInt(e.target.value))}
                     fullWidth
-                    InputProps={{ inputProps: { min: 1 } }}
                   />
                 </TableCell>
                 <TableCell>
                   <TextField
                     type="number"
                     value={producto.descuento}
-                    onChange={(e) => handleProductChange(index, 'descuento', Math.max(0, Math.min(100, parseFloat(e.target.value))))}
+                    onChange={(e) => handleProductChange(index, 'descuento', parseFloat(e.target.value))}
                     fullWidth
-                    InputProps={{ inputProps: { min: 0, max: 100 } }}
                   />
                 </TableCell>
-                <TableCell>{(producto.subtotal || 0).toFixed(2)}</TableCell>
+                <TableCell>{producto.subtotal.toFixed(2)}</TableCell>
                 <TableCell>
                   <IconButton onClick={() => handleRemoveProductRow(index)}>
                     <Delete />
