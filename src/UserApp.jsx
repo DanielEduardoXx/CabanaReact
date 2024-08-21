@@ -1,5 +1,10 @@
+<<<<<<< Updated upstream
 // UserApp.jsx
 import React from 'react';
+=======
+
+import React, { useContext, useEffect, useState } from 'react';
+>>>>>>> Stashed changes
 import { Route, Routes } from 'react-router-dom';
 import Inicio from './components/users/Inicio';
 import MenuLink from './components/users/MenuLink';
@@ -11,6 +16,11 @@ import CardPerfil from './components/users/common/CardPerfil';
 import ContinuaCompra from './components/users/common/ContinuaCompra';
 import CardCheckout from './components/users/common/CardCheckout';
 import Footer from './components/users/Footer.jsx';
+<<<<<<< Updated upstream
+=======
+import BtnCarrito from './components/users/common/BtnInfoCarrito.jsx';
+import { MyContext } from './services/MyContext.jsx';
+>>>>>>> Stashed changes
 
 const UserApp = () => {
   return (
