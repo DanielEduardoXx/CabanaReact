@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import Paper from "@mui/material/Paper";
-import Button from "@mui/material/Button";
-import Grid from "@mui/material/Grid";
+import { Box, Typography, Paper, Button, Grid, IconButton } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CtrlCantidad from "./CtrlCantidad";
 
@@ -40,36 +36,34 @@ function CardDetalleCarrito({
   let subTotalFormat = nf.format(subTotal);
 
   return (
-    <Paper elevation={3} sx={{ margin: "1rem", padding: "1rem" }}>
+    <Paper elevation={4} sx={{ margin: "1rem 0", padding: "1.5rem", borderRadius: "10px" }}>
       <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} md={2}>
-          <Button
-            color="error"
-            fullWidth
-            variant="contained"
-            endIcon={<DeleteIcon />}
-            onClick={getBorrar}
-          >
-
-          </Button>
+        
+        <Grid item xs={12} md={1} sx={{ display: 'flex', justifyContent: 'center' }}>
+          <IconButton color="error" onClick={getBorrar}>
+            <DeleteIcon />
+          </IconButton>
         </Grid>
 
-        <Grid item xs={12} md={2} sx={{ display: { xs: 'none', md: 'block' } }}>
+        <Grid item xs={12} md={2} sx={{ display: 'flex', justifyContent: 'center' }}>
           <img
             src={foto}
             alt={titulo}
-            style={{ width: "100%", borderRadius: "0.25rem" }}
+            style={{ width: "100px", height: "100px", objectFit: "cover", borderRadius: "8px" }}
           />
         </Grid>
 
-        <Grid item xs={12} md={2}>
-          <Typography fontSize={18} textAlign="justify">
+        <Grid item xs={12} md={3}>
+          <Typography variant="h6" textAlign="center" sx={{ fontWeight: 'bold' }}>
             {titulo}
+          </Typography>
+          <Typography variant="body2" textAlign="center" sx={{ color: 'text.secondary' }}>
+            {detalle}
           </Typography>
         </Grid>
 
-        <Grid item xs={12} md={1}>
-          <Typography fontSize={20} textAlign="center">
+        <Grid item xs={12} md={2}>
+          <Typography variant="body1" textAlign="center">
             v/u ${precioFormat}
           </Typography>
         </Grid>
@@ -79,7 +73,7 @@ function CardDetalleCarrito({
         </Grid>
 
         <Grid item xs={12} md={1}>
-          <Typography fontSize={20} textAlign="center">
+          <Typography variant="h6" textAlign="center" sx={{ fontWeight: 'bold' }}>
             ${subTotalFormat}
           </Typography>
         </Grid>
