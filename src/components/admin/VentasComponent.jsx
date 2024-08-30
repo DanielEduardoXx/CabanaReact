@@ -25,12 +25,10 @@ const styles = {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: '900px',
+    width: '400px',
     backgroundColor: 'white',
     padding: '1rem',
     boxShadow: 24,
-    maxHeight: '80vh',
-    overflowY: 'auto',
   },
 };
 
@@ -51,6 +49,7 @@ const VentasComponent = ({ searchQuery }) => {
     nom_producto: '',
     precio_producto: 0,
     cantidad: 1,
+    porcentaje: 0,
     descuento: 0,
     subtotal: 0,
   }]);
@@ -64,7 +63,8 @@ const VentasComponent = ({ searchQuery }) => {
     if (user) {
       try {
         const response = await axios.get(`${END_POINT}/ventaProceso`, {
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+          headers: { 'Authorization': `Bearer ${token}`,
+                     'Content-Type': 'application/json' }
         });
         if (response.status === 200) {
           setVentasData(response.data.data);
@@ -165,13 +165,19 @@ const VentasComponent = ({ searchQuery }) => {
         const selectedProducto = productos.find(prod => prod.id === value);
         newState[index].nom_producto = selectedProducto.nom_producto;
         newState[index].precio_producto = selectedProducto.precio_producto;
+        newState[index].cantidad = 1;
+        newState[index].porcentaje = 0;
       }
 
-      if (field === 'cantidad' || field === 'descuento' || field === 'precio_producto') {
+      newState[index].descuento = (newState[index].precio_producto * newState[index].cantidad * newState[index].porcentaje) / 100;
+      newState[index].subtotal = (newState[index].precio_producto * newState[index].cantidad) - newState[index].descuento;
+  
+
+      if (field === 'cantidad' || field === 'porcentaje' || field === 'precio_producto') {
         newState[index].subtotal = calcularSubtotal(
           newState[index].precio_producto,
           newState[index].cantidad,
-          newState[index].descuento
+          newState[index].porcentaje
         );
       }
 
@@ -190,6 +196,7 @@ const VentasComponent = ({ searchQuery }) => {
         nom_producto: '',
         precio_producto: 0,
         cantidad: 1,
+        porcentaje: 0,
         descuento: 0,
         subtotal: 0,
       },
@@ -217,11 +224,13 @@ const VentasComponent = ({ searchQuery }) => {
           nom_producto: detPromo.producto.nom_producto,
           precio_producto: detPromo.producto.precio_producto,
           cantidad: detPromo.cantidad,
+          porcentaje: detPromo.porcentaje,
           descuento: detPromo.descuento,
           subtotal: detPromo.subtotal,
         }));
         setProductosSeleccionados(productosPromocion);
         setTotal(promocion.total_promo);
+        console.log('productosSeleccionados:', productosSeleccionados);
       }
     }
   };
@@ -233,7 +242,6 @@ const VentasComponent = ({ searchQuery }) => {
       nom_producto: '',
       precio_producto: 0,
       cantidad: 1,
-      descuento: 0,
       subtotal: 0,
     }]);
     setSelectedPromocion('');
@@ -247,39 +255,69 @@ const VentasComponent = ({ searchQuery }) => {
 
   const handleAddVenta = async (event) => {
     event.preventDefault();
-    const newVentaData = {
-      user_id: event.target.user_id.value,
+  
+    const ventaData = {
+      user_id: parseInt(event.target.user_id.value),
       metodo_pago: event.target.metodo_pago.value,
-      total: total,
-      estado: 'Pendiente',
-      detalles: productosSeleccionados.map(prod => ({
-        producto_id: prod.id,
-        cantidad: prod.cantidad,
-        precio_unitario: prod.precio_producto,
-        descuento: prod.descuento,
-        subtotal: prod.subtotal,
-      })),
+      address_ventas: event.target.address_ventas.value,
     };
-
+  
     try {
-      const response = await axios.post(`${END_POINT}/ventas`, newVentaData, {
+      // Primero, crear la venta
+      const ventaResponse = await axios.post(`${END_POINT}/ventas`, ventaData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json' 
         }
       });
-
-      if (response.status === 201) {
-        setVentasData([...ventasData, response.data]);
-        setFilteredVentasData([...filteredVentasData, response.data]);
-        handleCloseNewVentaModal();
+  
+      if (ventaResponse.status === 201) {
+        console.log('Venta creada:', ventaResponse.data);
+        const ventaId = ventaResponse.data.data.id;
+  
+        // Luego, enviar los detalles de la venta
+        const detventaData = {
+          detalles: productosSeleccionados.map(prod => ({
+            nom_producto: prod.nom_producto,
+            pre_producto: prod.precio_producto,
+            cantidad: prod.cantidad,
+            subtotal: prod.subtotal,
+            venta_id: ventaId,
+            porcentaje: prod.porcentaje,
+            descuento: prod.descuento,
+            promocione_id: selectedPromocion ? parseInt(selectedPromocion) : null
+          })),
+          total: total,
+        };
+  
+        console.log('Datos de detventa a enviar:', detventaData);
+  
+        const detventaResponse = await axios.post(`${END_POINT}/detventas`, detventaData, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json' 
+          }
+        });
+  
+        if (detventaResponse.status === 201) {
+          setVentasData([...ventasData, {...ventaResponse.data.data, detalles: detventaResponse.data}]);
+          setFilteredVentasData([...filteredVentasData, {...ventaResponse.data.data, detalles: detventaResponse.data}]);
+          handleCloseNewVentaModal();
+        } else {
+          console.error('Error al agregar detalles de venta:', detventaResponse.data);
+        }
       } else {
-        console.error('Error al agregar venta:', response.data);
+        console.error('Error al agregar venta:', ventaResponse.data);
       }
     } catch (error) {
       console.error('Error al agregar venta:', error.response ? error.response.data : error.message);
+      if (error.response && error.response.data && error.response.data.messages) {
+        const errorMessages = Object.values(error.response.data.messages).flat();
+        alert(errorMessages.join('\n'));
+      }
     }
   };
+
 
   const handleViewVenta = async (venta) => {
     setSelectedVenta(venta);
@@ -307,7 +345,7 @@ const VentasComponent = ({ searchQuery }) => {
       user_id: event.target.user_id.value,
       metodo_pago: event.target.metodo_pago.value,
       total: event.target.total.value,
-      estado: event.target.estado.value,
+      address_ventas: event.target.address_ventas.value,
     };
 
     try {
@@ -378,6 +416,7 @@ const VentasComponent = ({ searchQuery }) => {
               <TableCell>ID Venta</TableCell>
               <TableCell>Cédula</TableCell>
               <TableCell>Metodo Pago</TableCell>
+              <TableCell>Direccion</TableCell>
               <TableCell>Total</TableCell>
               <TableCell>Estado</TableCell>
               <TableCell>Acciones</TableCell>
@@ -390,6 +429,7 @@ const VentasComponent = ({ searchQuery }) => {
                 <TableCell>{venta.id}</TableCell>
                 <TableCell>{venta.user_id}</TableCell>
                 <TableCell>{venta.metodo_pago}</TableCell>
+                <TableCell>{venta.address_ventas}</TableCell>
                 <TableCell>{venta.total}</TableCell>
                 <TableCell>{venta.estado}</TableCell>
                 <TableCell>
@@ -417,8 +457,8 @@ const VentasComponent = ({ searchQuery }) => {
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: '80%',
-    maxWidth: 800,
+    width: '90%',
+    maxWidth: 1000,
     bgcolor: 'background.paper',
     boxShadow: 24,
     p: 4,
@@ -445,6 +485,8 @@ const VentasComponent = ({ searchQuery }) => {
         <MenuItem value="T_credito">Tarjeta de crédito</MenuItem>
         <MenuItem value="Nequi">Nequi</MenuItem>
       </Select>
+
+      <TextField type="text" name="address_ventas" label="Dirección" fullWidth margin="normal" sx={{ mb: 2 }} required />
       
       <Select
         value={selectedPromocion}
@@ -470,6 +512,7 @@ const VentasComponent = ({ searchQuery }) => {
               <TableCell>Producto</TableCell>
               <TableCell>Precio</TableCell>
               <TableCell>Cantidad</TableCell>
+              <TableCell>Porcentaje</TableCell>
               <TableCell>Descuento (%)</TableCell>
               <TableCell>Subtotal</TableCell>
               <TableCell>Acciones</TableCell>
@@ -496,6 +539,7 @@ const VentasComponent = ({ searchQuery }) => {
                     type="number"
                     value={producto.precio_producto}
                     onChange={(e) => handleProductChange(index, 'precio_producto', parseFloat(e.target.value))}
+                    disabled
                     fullWidth
                   />
                 </TableCell>
@@ -510,8 +554,16 @@ const VentasComponent = ({ searchQuery }) => {
                 <TableCell>
                   <TextField
                     type="number"
+                    value={producto.porcentaje}
+                    onChange={(e) => handleProductChange(index, 'porcentaje', parseFloat(e.target.value))}
+                    fullWidth
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    type="number"
                     value={producto.descuento}
-                    onChange={(e) => handleProductChange(index, 'descuento', parseFloat(e.target.value))}
+                    disabled
                     fullWidth
                   />
                 </TableCell>
@@ -559,6 +611,7 @@ const VentasComponent = ({ searchQuery }) => {
                       <TableCell>ID Venta</TableCell>
                       <TableCell>Cédula</TableCell>
                       <TableCell>Metodo Pago</TableCell>
+                      <TableCell>Direccion</TableCell>
                       <TableCell>Total</TableCell>
                       <TableCell>Estado</TableCell>
                     </TableRow>
@@ -569,6 +622,7 @@ const VentasComponent = ({ searchQuery }) => {
                       <TableCell>{selectedVenta.id}</TableCell>
                       <TableCell>{selectedVenta.user_id}</TableCell>
                       <TableCell>{selectedVenta.metodo_pago}</TableCell>
+                      <TableCell>{selectedVenta.address_ventas}</TableCell>
                       <TableCell>{selectedVenta.total}</TableCell>
                       <TableCell>{selectedVenta.estado}</TableCell>
                     </TableRow>
@@ -610,7 +664,6 @@ const VentasComponent = ({ searchQuery }) => {
 
 
 
-
       <Modal open={isEditVentasModalOpen} onClose={handleCloseEditVentaModal}>
         <Box style={styles.modal}>
           <Typography variant="h6">Editar Venta</Typography>
@@ -622,11 +675,25 @@ const VentasComponent = ({ searchQuery }) => {
               <Select id="metodo_pago" name="metodo_pago" fullWidth margin="normal" defaultValue={selectedVenta.metodo_pago}>
                   <MenuItem value="Efectivo">Efectivo</MenuItem>
                   <MenuItem value="T_credito">tarjeta de credito</MenuItem>
-                  <MenuItem value="Nequi">Nequi</MenuItem>                
+                  <MenuItem value="Nequi">Nequi</MenuItem>                  
               </Select>
-              <TextField name="total" label="Total" fullWidth margin="normal" defaultValue={selectedVenta.total} />
-              <Select id="estado" name="estado" fullWidth margin="normal" defaultValue={selectedVenta.estado}>
-                  <MenuItem value="Completado">Completado</MenuItem>                 
+              <TextField name="address_ventas" label="Direccion" fullWidth margin="normal" defaultValue={selectedVenta.address_ventas} />
+              <TextField name="total" label="Total" fullWidth margin="normal" defaultValue={selectedVenta.total} />  
+
+              <Select 
+              name="metodo_pago"
+              label="Método de Pago"
+              fullWidth
+              displayEmpty
+              sx={{ mb: 2 }}
+              defaultValue={selectedVenta.estado}>
+              <MenuItem value=""disabled>
+                  <em value="Estado">Estado</em> 
+              </MenuItem>
+              <MenuItem value="Completado">Completado</MenuItem>
+                   
+              
+            
               </Select>             
               <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
                 <Button onClick={handleCloseEditVentaModal} sx={{ marginRight: 1 }}>Cancelar</Button>
@@ -651,7 +718,7 @@ const VentasComponent = ({ searchQuery }) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDeleteVentaDialog}>Cancelar</Button>
-          <Button onClick={handleDeleteVenta} sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
+          <Button type="submit" variant="contained" onClick={handleDeleteVenta} sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
             Confirmar
           </Button>
         </DialogActions>
