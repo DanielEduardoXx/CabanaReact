@@ -237,12 +237,15 @@ const VentasComponent = ({ searchQuery }) => {
     const editedVentaData = {
       user_id: event.target.user_id.value,
       metodo_pago: event.target.metodo_pago.value,
+      estado: event.target.estado.value,
       total: event.target.total.value,
       address_ventas: event.target.address_ventas.value,
+      
+      
     };
 
     try {
-      const response = await axios.put(`${END_POINT}/detventas/${selectedVenta.id}`, editedVentaData, {
+      const response = await axios.put(`${END_POINT}/ventas/${selectedVenta.id}`, editedVentaData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json' 
@@ -272,13 +275,7 @@ const VentasComponent = ({ searchQuery }) => {
 
   const handleDeleteVenta = async () => {
     try {
-       await axios.delete(`${END_POINT}/detventas/${selectedVenta.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`    
-        }
-      });
-
-        // Luego, elimina la venta en sí
+        //  elimina la venta 
     const response = await axios.delete(`${END_POINT}/ventas/${selectedVenta.id}`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -428,29 +425,33 @@ const VentasComponent = ({ searchQuery }) => {
           <Typography variant="h6">Editar Venta</Typography>
           {selectedVenta && (
             <form onSubmit={handleEditVentaSubmit}>
-              <TextField name="created_at" label="Fecha" fullWidth margin="normal" defaultValue={selectedVenta.created_at} />
-              <TextField name="user_id" label="Cédula" fullWidth margin="normal" defaultValue={selectedVenta.user_id} />
+              <TextField name="created_at" label="Fecha" fullWidth margin="normal" defaultValue={selectedVenta.created_at} disabled />
+              <TextField name="user_id" label="Cédula" fullWidth margin="normal" defaultValue={selectedVenta.user_id}disabled />
              
-              <Select id="metodo_pago" name="metodo_pago" fullWidth margin="normal" defaultValue={selectedVenta.metodo_pago}>
+              <Select id="metodo_pago" name="metodo_pago" fullWidth margin="normal" defaultValue={selectedVenta.metodo_pago}disabled>
                   <MenuItem value="Efectivo">Efectivo</MenuItem>
                   <MenuItem value="T_credito">tarjeta de credito</MenuItem>
                   <MenuItem value="Nequi">Nequi</MenuItem>                  
               </Select>
-              <TextField name="address_ventas" label="Direccion" fullWidth margin="normal" defaultValue={selectedVenta.address_ventas} />
-              <TextField name="total" label="Total" fullWidth margin="normal" defaultValue={selectedVenta.total} />  
+              <TextField name="address_ventas" label="Direccion" fullWidth margin="normal" defaultValue={selectedVenta.address_ventas} disabled />
+              <TextField name="total" label="Total" fullWidth margin="normal" defaultValue={selectedVenta.total} disabled />  
 
               <Select 
-              name="metodo_pago"
-              label="Método de Pago"
+              name="estado"
+              label="estado"
               fullWidth
               displayEmpty
               sx={{ mb: 2 }}
-              defaultValue={selectedVenta.estado}>
+              Value={selectedVenta.estado}
+              >  
               <MenuItem value=""disabled>
-                  <em value="Estado">Estado</em> 
+                  <em value="Estado">Estado</em>
               </MenuItem>
+              
               <MenuItem value="Completado">Completado</MenuItem>
-              </Select>             
+              </Select>  
+
+
               <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
                 <Button onClick={handleCloseEditVentaModal} sx={{ marginRight: 1 }}>Cancelar</Button>
                 <Button type="submit" variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }}>
