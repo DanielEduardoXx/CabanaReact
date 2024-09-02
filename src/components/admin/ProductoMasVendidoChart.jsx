@@ -1,69 +1,30 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Pie } from '@ant-design/charts';
-//import axios from 'axios';
-//import { MyContext } from '../../services/MyContext'; // Asegúrate de que la ruta sea correcta
+import { PieChart, Pie, Tooltip, Cell, Label } from 'recharts';
+import axios from 'axios';
+import { MyContext } from '../../services/MyContext'; // Asegúrate de que la ruta sea correcta
 
 const ProductoMasVendidoChart = () => {
   const [data, setData] = useState([]);
-  //const { user } = useContext(MyContext);
-  //const END_POINT = "http://arcaweb.test/api/V1";
+  const { user } = useContext(MyContext);
+  const END_POINT = "http://arcaweb.test/api/V1";
 
   useEffect(() => {
-    // Datos mokqueados
-    const mockData = [
-      { type: 'Producto A', value: 40 },
-      { type: 'Producto B', value: 21 },
-      { type: 'Producto C', value: 17 },
-      { type: 'Producto D', value: 13 },
-      { type: 'Producto E', value: 9 },
-    ];
-
-    // Simula un retardo en la carga de datos, como si fuera una llamada a la API
-    setTimeout(() => {
-      setData(mockData);
-    }, 1000);
-  }, []);
-
-  const config = {
-    appendPadding: 10,
-    data,
-    angleField: 'value',
-    colorField: 'type',
-    radius: 0.9,
-    label: {
-      type: 'outer',
-      content: ({ value }) => `${value}`, // Muestra el valor directamente
-      style: {
-        fontSize: 14,
-        textAlign: 'center',
-      },
-    },
-    tooltip: {
-      showTitle: false,
-      formatter: (datum) => ({ name: datum.type, value: datum.value }), // Muestra el valor en el tooltip
-    },
-    interactions: [{ type: 'element-active' }],
-  };
-
-  return <Pie {...config} />;
-};
-
-
-  /*useEffect(() => {
     const fetchData = async () => {
       const userSession = JSON.parse(sessionStorage.getItem('user'));
       const token = userSession?.token?.access_token;
 
       if (user && token) {
         try {
-          const response = await axios.get(`${END_POINT}/productoMasVendido`, {
+          const response = await axios.get(`${END_POINT}/producto-mas-vendido`, {
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
           });
           if (response.status === 200) {
-            setData(response.data.map(item => ({
-              type: item.nombre,
-              value: item.cantidad_vendida
-            })));
+            const formattedData = response.data.map(item => ({
+              name: item.nom_producto,
+              value: Number(item.total_cantidad_vendida)
+            }));
+            console.log(formattedData); // Verifica los datos en la consola
+            setData(formattedData);
           } else {
             console.error('Datos no válidos:', response.data);
           }
@@ -78,25 +39,43 @@ const ProductoMasVendidoChart = () => {
     fetchData();
   }, [user]);
 
-  const config = {
-    appendPadding: 10,
-    data,
-    angleField: 'value',
-    colorField: 'type',
-    radius: 0.9,
-    label: {
-      type: 'inner',
-      offset: '-30%',
-      content: ({ percent }) => `${(percent * 100).toFixed(0)}%`,
-      style: {
-        fontSize: 14,
-        textAlign: 'center',
-      },
-    },
-    interactions: [{ type: 'element-active' }],
-  };
+  // Lista de colores para las porciones del gráfico
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#FF6F61', '#6A5ACD', '#FFD700', '#FF6347'];
 
-  return <Pie {...config} />;
-};*/
+  return (
+    <div style={{ width: '100%', height: 400 }}>
+      <PieChart width={700} height={400}>
+        <Pie
+          data={data}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="50%"
+          outerRadius={150}
+          fill="#8884d8"
+          labelLine={false}
+          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+        >
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          ))}
+        </Pie>
+        <Tooltip
+          content={({ payload }) => {
+            if (payload && payload.length) {
+              const { name, value } = payload[0].payload;
+              return (
+                <div style={{ backgroundColor: '#fff', border: '1px solid #ddd', padding: '5px' }}>
+                  <strong>{name}</strong>: {value}
+                </div>
+              );
+            }
+            return null;
+          }}
+        />
+      </PieChart>
+    </div>
+  );
+};
 
 export default ProductoMasVendidoChart;
