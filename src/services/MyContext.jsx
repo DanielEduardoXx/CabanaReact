@@ -1,13 +1,14 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Modal, Fade, Typography, Button, Box } from "@mui/material";
 
+
 export const MyContext = createContext({
   user: null,
-  setUser: () => {},
+  setUser: () => { },
 });
 
-const INACTIVITY_TIMEOUT = 1000000; // 1 minuto de inactividad
+const INACTIVITY_TIMEOUT = 50000000; // 1 minuto de inactividad
 
 export const MyProvider = ({ children }) => {
   const navigate = useNavigate();
@@ -41,6 +42,9 @@ export const MyProvider = ({ children }) => {
     } else {
       sessionStorage.removeItem("user");
       setOpen(false); // Cierra el modal si no hay usuario
+      setUser(null); // Limpiar datos del usuario después de la inactividad
+      navigate("/iniciar-sesion"); // Redirige al login
+
     };
 
 

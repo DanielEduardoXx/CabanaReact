@@ -59,7 +59,7 @@ export default function CamposRegistro() {
         direccion: '',
         genero: '',
         image: null,
-        role_id: '2'
+        // role_id: '2'
     });
 
     const fechaActual = dayjs();
@@ -362,7 +362,7 @@ export default function CamposRegistro() {
                             helperText={errors.tel}
 
                         />
-
+{/* 
                         <TextField
 
                             sx={{ display: 'none' }}
@@ -373,7 +373,7 @@ export default function CamposRegistro() {
                             value={formData.role_id}
                             onChange={handleChange}
 
-                        />
+                        /> */}
 
                         <TextField
                             sx={{ margin: '5px 0', width: { xs: '100%' } }}

@@ -10,6 +10,7 @@ import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import TablaInformacion from "./TablaComprasUser.jsx";
 import { getAllCompras } from "../../../services/ventasUser.js";
+import { useNavigate } from "react-router-dom";
 
 
 const style = {
@@ -32,10 +33,12 @@ const Perfil = () => {
     const { user, setUser } = useContext(MyContext);
     const [open, setOpen] = useState(false);
     const [openCompras, setOpenCompras] = useState(false);
+    const [openModalFoto, setOpenModalFoto] = useState(false);
     const [profileImage, setProfileImage] = useState(null);
     const [message, setMessage] = useState('');
     const [compras, setCompras] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         id: '',
         name: '',
@@ -100,6 +103,8 @@ const Perfil = () => {
                     console.log('>>:', imageUrl);
                 } catch (error) {
                     console.error('Error al cargar la imagen de perfil:', error);
+
+
                     setProfileImage(null);
                 }
             };
@@ -111,9 +116,13 @@ const Perfil = () => {
 
     const handleOpen = () => setOpen(true);
     const handleOpenCompras = () => setOpenCompras(true);
+    const handleOpenModalFoto = () => setOpenModalFoto(true);
+
+
     const handleClose = () => {
         setOpenCompras(false)
         setOpen(false);
+        setOpenModalFoto(false);
         setMessage(''); // Limpiar el mensaje al cerrar el modal
     };
 
@@ -184,6 +193,12 @@ const Perfil = () => {
         }
     };
 
+
+    const handleSolicitudEmail = () => {
+        // Redirige a la ruta deseada, por ejemplo, "/cambiar-contraseña"
+        navigate('/SolicitudEmail');
+    };
+
     if (loading) {
         return <Typography>Cargando...</Typography>;
     }
@@ -198,16 +213,23 @@ const Perfil = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
 
                 <PicRegistro sx={{ position: 'relative' }} />
+                <Box>
+
+                </Box>
 
                 <Paper sx={{ minWidth: { md: '50%', sm: '50%', xs: '100%' }, padding: '2rem', display: 'flex', flexDirection: 'column', position: { md: 'absolute' } }}>
 
+
+
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                         {/* Imagen de perfil */}
-                        {profileImage ? (
-                            <img src={profileImage} alt="Foto de perfil" className="profile-image" style={{ width: '150px', height: '150px', borderRadius: '50%' }} />
-                        ) : (
-                            <p>No se pudo cargar la imagen de perfil</p>
-                        )}
+                        <Button onClick={handleOpenModalFoto} sx={{ padding: 0, borderRadius: '50%', minWidth: 0 }}>
+                            {profileImage ? (
+                                <img src={profileImage} alt="Foto de perfil" style={{ width: '150px', height: '150px', borderRadius: '50%' }} />
+                            ) : (
+                                <p>No se pudo cargar la imagen de perfil</p>
+                            )}
+                        </Button>
 
                     </Box>
 
@@ -263,23 +285,23 @@ const Perfil = () => {
                                         <TextField sx={{ margin: '5px 0', width: { xs: '100%' } }} required name="tel" label="Teléfono" variant="outlined" value={formData.tel} onChange={handleChange} />
                                     </Box>
 
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem' }}>
-                                        <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} id="file-upload" />
-                                        <label htmlFor="file-upload">
-                                            <Button variant="contained" component="span">Subir Imagen</Button>
-                                        </label>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
-                                        <Button type="submit" variant="contained" sx={{ marginTop: '1rem ' }}>Actualizar Perfil</Button>
+                                        <Button type="submit" variant="contained" color="success" sx={{ marginTop: '1rem ' }}>Actualizar Perfil</Button>
+
+                                        <Button
+                                            type="submit"
+                                            variant="contained"
+                                            sx={{ marginTop: '1rem ' }}
+                                            onClick={handleSolicitudEmail}
+                                        >
+                                            Contraseña
+                                        </Button>
+
                                     </Box>
 
 
-                                    {message && (
 
-                                        <Stack sx={{ width: '100%' }} spacing={2}>
-                                            <Alert severity="success">{message}</Alert>
-                                        </Stack>
-
-                                    )}
 
                                 </StyledForm>
                             </Box>
@@ -294,6 +316,54 @@ const Perfil = () => {
                                     idKey="id" // Usa el id de la venta como key
                                 />
                             </Box>
+                        </Modal>
+
+                        <Modal open={openModalFoto} onClose={handleClose} aria-labelledby="modal-title" aria-describedby="modal-description">
+                            <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', border: '2px solid #000', boxShadow: 24, p: 4 }}>
+                                <Typography id="modal-title" variant="h6" component="h2">
+                                    Actualizar Foto Perfil
+                                </Typography>
+
+                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                    {/* Imagen de perfil */}
+                                    <Button sx={{ padding: 0, borderRadius: '50%', minWidth: 0 }}>
+                                        {profileImage ? (
+                                            <img src={profileImage} alt="Foto de perfil" style={{ width: '150px', height: '150px', borderRadius: '50%' }} />
+                                        ) : (
+                                            <p>No se pudo cargar la imagen de perfil</p>
+                                        )}
+                                    </Button>
+
+                                </Box>
+
+                                <Box sx = {{ display:'flex', justifyContent:'space-between', margin:'1rem 0 1rem 0'}} >
+
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                        <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} id="file-upload" />
+                                        <label htmlFor="file-upload">
+                                            <Button variant="contained" component="span">Elegir Imagen</Button>
+                                        </label>
+
+                                    </Box>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                        <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} id="file-upload" />
+                                        <label htmlFor="file-upload">
+                                            <Button variant="contained" component="span">Eliminar Imagen</Button>
+                                        </label>
+
+                                    </Box>
+                                </Box>
+
+
+                                {message && (
+
+                                    <Stack sx={{ width: '100%' }} spacing={2}>
+                                        <Alert severity="success">{message}</Alert>
+                                    </Stack>
+
+                                )}
+                            </Box>
+
                         </Modal>
                     </Box>
                 </Paper>

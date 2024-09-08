@@ -89,7 +89,7 @@ export default function CardLogin() {
 
         >
           <NavLink id="registrarse" to="../registro">Registrarse</NavLink>
-          <Link id="olvido-password" href="#">¿Olvidaste tu Contraseña?</Link>
+          <NavLink id="olvido-password" to="../SolicitudEmail">¿Olvidaste tu Contraseña?</NavLink>
         </Box>
 
       </Box>

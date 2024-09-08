@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Box, Typography, IconButton, Badge } from '@mui/material';
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
-import { allCategorias } from "../../../services/categorias";
+import { allCategorias, allPromociones } from "../../../services/categorias";
 
 function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
   const [data, setData] = useState([]);
+  const [promociones, setPromociones] = useState([]);
+  const [selectedCategoria, setSelectedCategoria] = useState(null); // Estado para la categoría seleccionada
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -14,13 +16,15 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
     openModal(true);
   };
 
+
   useEffect(() => {
     let isMounted = true;
     const getData = async () => {
       try {
-        const result = await allCategorias();
+        const categoriasResult = await allCategorias();
+
         if (isMounted) {
-          setData(Array.isArray(result) ? result : []);
+          setData(Array.isArray(categoriasResult) ? categoriasResult : []);
           setLoading(false);
         }
       } catch (err) {
@@ -37,40 +41,62 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
   }, []);
 
   const handleCategoriaClick = (id) => {
-    getValor(id);
+    setSelectedCategoria(id);
+    getValor(id); // Cambiado de onCategoriaSelect a getValor
   };
 
+
   if (loading) return <Typography>Cargando...</Typography>;
-  if (error) return <Typography>Error al cargar categorías</Typography>;
+  if (error) return <Typography>Error al cargar datos</Typography>;
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
       <Box sx={{ display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap', padding: '1rem', gap: '1rem' }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <img 
-            src={`../../../../public/Hamburguesas.jpg`} 
-            alt={'imgTodos'} 
-            onClick={() => handleCategoriaClick(null)} 
-            style={{ width: '40px', height: '40px', cursor: 'pointer' }} 
+          <img
+            src={`../../../../public/Hamburguesas.jpg`}
+            alt={'imgTodos'}
+            onClick={() => handleCategoriaClick(null)}
+            style={{ width: '40px', height: '40px', cursor: 'pointer' }}
           />
           <Typography>Todos</Typography>
         </Box>
         {data.map(item => (
           <Box key={item.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <img 
-              src={`${ruta}/${item.nombre}.jpg`} 
-              alt={item.nombre} 
-              onClick={() => handleCategoriaClick(item.id)} 
-              style={{ width: '40px', height: '40px', cursor: 'pointer' }} 
+            <img
+              src={`${ruta}/${item.nombre}.jpg`}
+              alt={item.nombre}
+              onClick={() => handleCategoriaClick(item.id)}
+              style={{ width: '40px', height: '40px', cursor: 'pointer' }}
             />
             <Typography>{item.nombre}</Typography>
           </Box>
         ))}
       </Box>
-      <IconButton 
-        aria-label="show cart items" 
-        color="inherit" 
-        onClick={handleModal} 
+
+      {/* {selectedCategoria === 5 && promociones.length > 0 && (
+        <Box sx={{ marginTop: '1rem', width: '100%' }}>
+          <Typography variant="h6" gutterBottom>Promociones</Typography>
+          <Box sx={{ display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap', padding: '1rem', gap: '1rem' }}>
+            {promociones.map(item => (
+              <Box key={item.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <img
+                  src={`${ruta}/${item.nombre}.jpg`}
+                  alt={item.nombre}
+                  onClick={() => handleCategoriaClick(item.id)}
+                  style={{ width: '40px', height: '40px', cursor: 'pointer' }}
+                />
+                <Typography>{item.nombre}</Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      )} */}
+
+      <IconButton
+        aria-label="show cart items"
+        color="inherit"
+        onClick={handleModal}
         disabled={noCompras <= 0}
         sx={{
           position: 'fixed',

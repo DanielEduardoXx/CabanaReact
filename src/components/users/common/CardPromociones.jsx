@@ -83,58 +83,43 @@ function CardProducto({ productos, fotosProductos, agregarCompra, actualizarCant
     <Box sx={{ padding: "2rem", margin: "1rem" }}>
       <Grid container spacing={3}>
         {Array.isArray(productos) && productos.length > 0 ? (
-          productos.map((item) => {
-            if (!item.id) {
-              console.error('Elemento sin id:', item);
+          productos.map((producto) => {
+            if (!producto.id) {
+              console.error('Producto sin id:', producto);
               return null;
             }
             return (
-              <Grid item xs={12} sm={6} md={4} key={item.id}>
+              <Grid item xs={12} sm={6} md={4} key={producto.id}>
                 <Paper elevation={5} sx={{ padding: "1.5rem", borderRadius: "10px", height: "100%" }}>
                   <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: "100%" }}>
                     <Box sx={{ textAlign: 'center' }}>
                       <Typography variant="h6" sx={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                        {item.nom_promo ? item.nom_promo : item.nom_producto}
+                        {producto.nom_producto}
                       </Typography>
                       <LazyLoad height={200} offset={100} once>
                         <img
-                          src={loadedImages[item.id] || `${ruta}/Hamburguesas.jpg`}
-                          alt={item.nom_promo ? item.nom_promo : item.nom_producto}
+                          src={loadedImages[producto.id] || 'placeholder.jpg'}
+                          alt={producto.nom_producto}
                           style={{ width: "100%", height: "150px", objectFit: "cover", borderRadius: "8px" }}
                         />
                       </LazyLoad>
-                      {item.precio_producto ? (
-                        <Typography variant="body1" sx={{ marginTop: '0.5rem' }}>
-                          Precio: ${item.precio_producto.toFixed(2)}
-                        </Typography>
-                      ) : (
-                        <Typography variant="body1" sx={{ marginTop: '0.5rem' }}>
-                          Total: ${item.total_promo.toFixed(2)}
-                        </Typography>
-                      )}
+                      <Typography variant="body1" sx={{ marginTop: '0.5rem' }}>
+                        Precio: ${producto.precio_producto.toFixed(2)}
+                      </Typography>
                       <Typography variant="body2" sx={{ color: 'text.secondary', marginTop: '0.3rem' }}>
-                        {item.detpromociones && item.detpromociones.length > 0
-                        // agregamos index para que el separador br no se aplique al ultimo elemento
-                          ? item.detpromociones.map((promo, index) => (
-                         
-                            <span key={index}>
-                              *{promo.producto.detalle}
-                              {index < item.detpromociones.length - 1 && <br />}
-                            </span>
-                          ))
-                          : item.detalle}
+                        {producto.detalle}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1rem' }}>
                       <CtrlCantidad
-                        noProductos={cantidades[item.id] || 0}
-                        getCantidad={(valor) => handleCantidadChange(item.id, valor)}
+                        noProductos={cantidades[producto.id] || 0}
+                        getCantidad={(valor) => handleCantidadChange(producto.id, valor)}
                       />
                       <Button
                         variant="contained"
                         color="primary"
-                        onClick={() => handleComprar(item)}
-                        disabled={!(cantidades[item.id] > 0)}
+                        onClick={() => handleComprar(producto)}
+                        disabled={!(cantidades[producto.id] > 0)}
                         sx={{ marginTop: '1rem', width: '100%' }}
                       >
                         Comprar

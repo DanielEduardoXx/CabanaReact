@@ -6,7 +6,7 @@ import { Modal, Fade, Typography, Button, Box } from "@mui/material";
 // Crear el contexto
 export const MyContext = createContext({
   user: null,
-  setUser: () => {},
+  setUser: () => { },
 });
 
 const INACTIVITY_TIMEOUT = 50000000; // 5 segundos de inactividad para propósitos de prueba (ajusta según sea necesario)
@@ -41,6 +41,9 @@ export const MyProvider = ({ children }) => {
     } else {
       sessionStorage.removeItem("user");
       setOpen(false); // Cierra el modal si no hay usuario
+      setUser(null); // Limpiar datos del usuario después de la inactividad
+      navigate("/iniciar-sesion"); // Redirige al login
+
     }
 
     window.addEventListener("mousemove", handleActivity);

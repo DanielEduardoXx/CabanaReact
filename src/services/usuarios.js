@@ -2,16 +2,15 @@ import axios from "axios";
 
 
 
-const  END_POINT = "https://randomuser.me/api/"
+const API_URL = 'http://arcaweb.test/api/V1/password-reset-request';
 
-export const getUsuarios = async () => {
+export const recuperarPasswordEmail = async (email) => {
     try {
-    const response = await axios.get(END_POINT);
-    // console.log ("datos servicio ... " + JSON.stringify(response.data))
-    return(response.data);
-} catch (error) {
-    return ("error" + error)
-}
+        const resultado = await axios.post(`${API_URL}`, { email });
+        console.log('API Response: ', resultado);
+        return resultado.data;
+    } catch (error) {
+        console.error("Error enviando datos:", error);
+        throw error;
+    }
 };
-
-

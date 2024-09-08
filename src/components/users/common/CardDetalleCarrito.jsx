@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Typography, Paper, Button, Grid, IconButton } from "@mui/material";
+import { Box, Typography, Paper, Button, Grid, IconButton,  } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CtrlCantidad from "./CtrlCantidad";
 
@@ -34,7 +34,7 @@ function CardDetalleCarrito({
   let subTotal = precio * cantidad;
   let precioFormat = nf.format(precio);
   let subTotalFormat = nf.format(subTotal);
-
+  
   return (
     <Paper elevation={4} sx={{ margin: "1rem 0", padding: "1.5rem", borderRadius: "10px" }}>
       <Grid container spacing={2} alignItems="center">
@@ -68,7 +68,7 @@ function CardDetalleCarrito({
           </Typography>
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={3} sx={{display:'flex', justifyContent:'center'}}>
           <CtrlCantidad noProductos={cantidad} getCantidad={getCantidad} borrar={getBorrar} />
         </Grid>
 

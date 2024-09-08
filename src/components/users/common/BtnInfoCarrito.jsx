@@ -1,8 +1,9 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { Button, Box, Modal, Typography, Fade, Paper } from "@mui/material";
+import { Button, Box, Modal, Typography, Fade, Paper, IconButton, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { styled } from '@mui/material/styles';
-import { MyContext } from '../../../services/MyContext'; // Asegúrate de importar el contexto
+import { MyContext } from '../../../services/MyContext';
 import { deleteVentaUser } from '../../../services/ventasUser';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const ModalContent = styled(Box)(({ theme }) => ({
     position: 'absolute',
@@ -10,7 +11,7 @@ const ModalContent = styled(Box)(({ theme }) => ({
     left: '50%',
     transform: 'translate(-50%, -50%)',
     width: 400,
-    backgroundColor: 'white',
+    backgroundColor: theme.palette.background.paper,
     padding: theme.spacing(4),
     boxShadow: theme.shadows[5],
     borderRadius: theme.shape.borderRadius,
@@ -18,37 +19,42 @@ const ModalContent = styled(Box)(({ theme }) => ({
 
 function BtnCarrito() {
     const [open, setOpen] = useState(false);
-    const [confirmOpen, setConfirmOpen] = useState(false); // Estado para el modal de confirmación
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [ventaToDelete, setVentaToDelete] = useState(null);
     const { user } = useContext(MyContext);
-    const [compra, setCompra] = useState([]);
+    const [compras, setCompras] = useState([]);
+    const [ventaIds, setVentaIds] = useState([]);
     const [total, setTotal] = useState(0);
 
-    useEffect(() => {
+    const fetchCartData = () => {
         if (user && user.user.id) {
-            const cartKey = `compras_${user.user.id}`;
-            const storedCart = JSON.parse(localStorage.getItem(cartKey)) || [];
-            setCompra(storedCart);
+            const comprasKey = `compras_${user.user.id}`;
+            const ventaKey = `venta_${user.user.id}`;
+            
+            const storedCompras = JSON.parse(localStorage.getItem(comprasKey)) || [];
+            const storedVentaIds = JSON.parse(localStorage.getItem(ventaKey)) || [];
 
-            const newTotal = storedCart.reduce((acc, item) => acc + item.producto.precio_producto * item.cantidad, 0);
+            setCompras(storedCompras);
+            setVentaIds(storedVentaIds);
+
+            const newTotal = storedCompras.reduce(
+                (acc, compra) => acc + compra.producto.precio_producto * compra.cantidad,
+                0
+            );
             setTotal(newTotal);
         } else {
-            setCompra([]);
+            setCompras([]);
+            setVentaIds([]);
             setTotal(0);
         }
+    };
+
+    useEffect(() => {
+        fetchCartData();
     }, [user]);
 
     useEffect(() => {
-        const handleStorageChange = () => {
-            if (user && user.user.id) {
-                const cartKey = `compras_${user.user.id}`;
-                const storedCart = JSON.parse(localStorage.getItem(cartKey)) || [];
-                setCompra(storedCart);
-
-                const newTotal = storedCart.reduce((acc, item) => acc + item.producto.precio_producto * item.cantidad, 0);
-                setTotal(newTotal);
-            }
-        };
-
+        const handleStorageChange = fetchCartData;
         window.addEventListener('storage', handleStorageChange);
         return () => window.removeEventListener('storage', handleStorageChange);
     }, [user]);
@@ -56,42 +62,55 @@ function BtnCarrito() {
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
-    // Función para manejar la confirmación de la cancelación
-    const handleConfirmCancel = () => {
+    const handleConfirmOpen = (ventaId) => {
+        setVentaToDelete(ventaId);
         setConfirmOpen(true);
     };
 
-    // Función para manejar la eliminación de una compra
+    const handleConfirmClose = () => {
+        setVentaToDelete(null);
+        setConfirmOpen(false);
+    };
+
     const handleEliminarCompra = async () => {
-        setConfirmOpen(false); // Cerrar el modal de confirmación
+        if (ventaToDelete) {
+            try {
+                // Eliminar la venta desde el backend
+                await deleteVentaUser(ventaToDelete);
 
-        // Leer el ID de venta desde localStorage
-        const ventaId = JSON.parse(localStorage.getItem(`venta_${user.user.id}`));
-        console.log(`venta_${user.user.id}`)
-        if (!ventaId) {
-            console.error('ID de venta no disponible');
-            return;
-        }
+                // Filtrar la compra eliminada del array de compras
+                const updatedCompras = compras.filter((compra, index) => ventaIds[index] !== ventaToDelete);
 
-        try {
-            await deleteVentaUser(ventaId);
+                // Actualizar el localStorage
+                const comprasKey = `compras_${user.user.id}`;
+                localStorage.setItem(comprasKey, JSON.stringify(updatedCompras));
 
-            // Eliminar la compra del localStorage y actualizar el estado
-            const cartKey = `compras_${user.user.id}`;
-            localStorage.removeItem(cartKey);
-            localStorage.removeItem(`venta_${user.user.id}`);
+                // Eliminar el ID de la venta de la lista de IDs en el localStorage
+                const updatedVentaIds = ventaIds.filter(id => id !== ventaToDelete);
+                const ventaKey = `venta_${user.user.id}`;
+                localStorage.setItem(ventaKey, JSON.stringify(updatedVentaIds));
 
-            setCompra([]);
-            setTotal(0);
-            handleClose();
-        } catch (error) {
-            console.error('Error al eliminar la compra:', error.message);
+                // Actualizar el estado local
+                setCompras(updatedCompras);
+                setVentaIds(updatedVentaIds);
+
+                // Recalcular el total
+                const newTotal = updatedCompras.reduce(
+                    (acc, compra) => acc + compra.producto.precio_producto * compra.cantidad,
+                    0
+                );
+                setTotal(newTotal);
+            } catch (error) {
+                console.error('Error al eliminar la compra:', error.message);
+            } finally {
+                handleConfirmClose();
+            }
         }
     };
 
     return (
         <Box sx={{ position: 'fixed', bottom: 16, left: 16, zIndex: 1000 }}>
-            {user && compra.length > 0 && ( // Mostrar el botón solo si hay productos en el carrito y el usuario está autenticado
+            {user && compras.length > 0 && (
                 <>
                     <Button variant="contained" color="primary" onClick={handleOpen}>
                         Carrito
@@ -109,17 +128,24 @@ function BtnCarrito() {
                                     Carrito de Compras
                                 </Typography>
 
-                                {compra.length > 0 ? (
+                                {compras.length > 0 ? (
                                     <>
-                                        {compra.map((item) => (
-                                            <Paper key={item.id} sx={{ padding: '1rem', margin: '1rem 0' }}>
+                                        {compras.map((compra, index) => (
+                                            <Paper key={index} sx={{ padding: '1rem', margin: '1rem 0', position: 'relative' }}>
                                                 <Typography>
-                                                    {item.producto.nom_producto} - {item.cantidad} x ${item.producto.precio_producto}
+                                                    {compra.producto.nom_producto} - {compra.cantidad} x ${compra.producto.precio_producto}
                                                 </Typography>
+                                                <IconButton
+                                                    aria-label="delete"
+                                                    onClick={() => handleConfirmOpen(ventaIds[index])}
+                                                    sx={{ position: 'absolute', top: 8, right: 8 }}
+                                                >
+                                                    <DeleteIcon />
+                                                </IconButton>
                                             </Paper>
                                         ))}
                                         <Typography variant="h6" sx={{ marginTop: '1rem' }}>
-                                            Valor Total: $ {total.toLocaleString('en-US')}
+                                            Valor Total: ${total.toLocaleString('en-US')}
                                         </Typography>
                                     </>
                                 ) : (
@@ -128,11 +154,8 @@ function BtnCarrito() {
                                     </Typography>
                                 )}
 
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
-                                    <Button onClick={handleConfirmCancel} variant="contained" color="error" fullWidth>
-                                        Cancelar Pedido
-                                    </Button>
-                                    <Button onClick={handleClose} variant="contained" color="success" fullWidth>
+                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                                    <Button onClick={handleClose} variant="contained" color="success">
                                         OK!
                                     </Button>
                                 </Box>
@@ -140,29 +163,27 @@ function BtnCarrito() {
                         </Fade>
                     </Modal>
 
-                    {/* Modal de confirmación de cancelación */}
-                    <Modal
+                    <Dialog
                         open={confirmOpen}
-                        onClose={() => setConfirmOpen(false)}
-                        aria-labelledby="confirm-cancel-title"
-                        aria-describedby="confirm-cancel-description"
+                        onClose={handleConfirmClose}
+                        aria-labelledby="confirm-dialog-title"
+                        aria-describedby="confirm-dialog-description"
                     >
-                        <Fade in={confirmOpen}>
-                            <ModalContent>
-                                <Typography variant="h6" align="center">
-                                    ¿Estás seguro de que deseas cancelar el pedido?
-                                </Typography>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
-                                    <Button onClick={handleEliminarCompra} variant="contained" color="error" fullWidth>
-                                        Cancelar Pedido
-                                    </Button>
-                                    <Button onClick={() => setConfirmOpen(false)} variant="contained" color="success" fullWidth>
-                                        No, Continuar
-                                    </Button>
-                                </Box>
-                            </ModalContent>
-                        </Fade>
-                    </Modal>
+                        <DialogTitle id="confirm-dialog-title">¿Eliminar Compra?</DialogTitle>
+                        <DialogContent>
+                            <DialogContentText id="confirm-dialog-description">
+                                ¿Estás seguro de que deseas eliminar esta compra? Esta acción no se puede deshacer.
+                            </DialogContentText>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleConfirmClose} color="primary">
+                                Cancelar
+                            </Button>
+                            <Button onClick={handleEliminarCompra} color="error">
+                                Eliminar
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
                 </>
             )}
         </Box>

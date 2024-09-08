@@ -1,4 +1,5 @@
 import axios from 'axios';
+import refresh_token from './token';
 
 const API_URL = 'http://arcaweb.test/api/V1/images';
 const API_URL_UPDATE = 'http://arcaweb.test/api/V1/images';  // Asegúrate de que '2' sea el ID correcto o ajústalo según sea necesario
@@ -59,8 +60,10 @@ const fotoPerfil = async (userId, image) => {
     } catch (error) {
         console.error('Error en subir img', error.response?.data || error.message);
 
-        if (error.response?.data?.message === 'Ya hay una imagen asignada, por favor actualícela o elimínela') {
-            console.log('ya hay una imagen, intentando actualizar...');
+        // Verifica si el error es debido a que ya existe una imagen
+        if (error.response?.data?.message?.includes('Ya hay una imagen asignada')) {
+            console.log('Ya hay una imagen, intentando actualizar...');
+
             try {
                 const updateResponse = await updateFoto(userId, image);
                 return updateResponse;
@@ -69,9 +72,13 @@ const fotoPerfil = async (userId, image) => {
                 throw updateError;
             }
         } else {
+            // Muestra un mensaje de error genérico
+            console.error('Error al subir la imagen: ', error.response?.data?.message || error.message);
             setMessage('Error al subir la imagen: ' + (error.response?.data?.message || error.message));
+            throw error;  // Lanza el error para que el llamado al método lo maneje
         }
     }
 };
+
 
 export default fotoPerfil;

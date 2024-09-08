@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Box, Paper, TextField, Button, MenuItem, FormControl, Select, InputLabel, Typography, Modal, Fade } from "@mui/material";
+import {
+    Box, Paper, TextField, Button, MenuItem, FormControl, Select, InputLabel, Typography, Modal, Fade, Alert, Stack
+} from "@mui/material";
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { MyContext } from "../../../services/MyContext";
 import { ventasUser, detVentasUser } from '../../../services/ventasUser';
-import Alert from '@mui/material/Alert';
-import Stack from '@mui/material/Stack';
 
 const StyledForm = styled('form')(({ theme }) => ({
     '& > *': {
         width: '100%',
+        marginBottom: theme.spacing(2),
     },
 }));
 
@@ -19,7 +20,7 @@ const ModalContent = styled(Box)(({ theme }) => ({
     left: '50%',
     transform: 'translate(-50%, -50%)',
     width: 400,
-    backgroundColor: 'white',
+    backgroundColor: theme.palette.background.paper,
     padding: theme.spacing(4),
     boxShadow: theme.shadows[5],
     borderRadius: theme.shape.borderRadius,
@@ -32,7 +33,7 @@ function CardCheckout() {
         tipo_de_entrega: '',
         estado: 1,
         total: 0,
-        user_id: null
+        user_id: null,
     });
     const [compra, setCompra] = useState([]);
     const [total, setTotal] = useState(0);
@@ -50,23 +51,50 @@ function CardCheckout() {
             const storedCart = JSON.parse(localStorage.getItem(`cart_${user.user.id}`)) || [];
             setCompra(storedCart);
 
-            const newTotal = storedCart.reduce((acc, item) => acc + item.producto.precio_producto * item.cantidad, 0);
-            setTotal(newTotal);
+            const newTotal = storedCart.reduce((acc, item) => {
+                // Si el producto tiene una promoción
+                if (item.producto.detpromociones && item.producto.detpromociones.length > 0) {
+                    // Sumar los subtotales de las promociones
+                    const totalPromocion = item.producto.detpromociones.reduce((subAcc, promo) => {
+                        return subAcc + parseFloat(promo.subtotal);
+                    }, 0);
+                    return acc + totalPromocion;
+                }
+            
+                // Si es un producto regular
+                const precioProducto = item.producto.precio_producto ? parseFloat(item.producto.precio_producto) : 0;
+                const cantidad = item.cantidad ? parseInt(item.cantidad, 10) : 0;
+                return acc + (precioProducto * cantidad);
+            }, 0);
+            
+            setTotal(newTotal);  // Asigna el nuevo total
+
+            // Verifica si el carrito contiene promociones
+            let descuentoTotal = 0;
+            let porcentajeTotal = 0;
+            let promocioneId = null;
+
+            storedCart.forEach(item => {
+                if (item.producto.detpromociones && item.producto.detpromociones.length > 0) {
+                    const promo = item.producto.detpromociones[0];  // Esto podría necesitar ajustes si hay múltiples promociones
+                    descuentoTotal += parseFloat(promo.descuento);
+                    porcentajeTotal += parseFloat(promo.porcentaje);  // Corrige aquí para usar porcentaje en lugar de descuento
+                    promocioneId = promo.promocione_id;  // Esto podría necesitar ajustes si hay múltiples promociones
+                }
+            });
 
             setFormData(prevData => ({
                 ...prevData,
                 total: newTotal,
                 user_id: user.user.id,
-                address_ventas: address
+                address_ventas: address,
+                descuento: descuentoTotal > 0 ? descuentoTotal : null,
+                porcentaje: porcentajeTotal > 0 ? porcentajeTotal : null,
+                promocione_id: promocioneId,
             }));
         }
-    }, [user]);
+    }, [user, address]);
 
-    useEffect(() => {
-        if (user && user.user.direccion) {
-            setAddress(user.user.direccion);
-        }
-    }, [user]);
 
     useEffect(() => {
         if (user && compra.length > 0) {
@@ -86,7 +114,6 @@ function CardCheckout() {
 
     const handleChangeDireccion = (event) => {
         const { value } = event.target;
-    
         setFormData(prevData => ({
             ...prevData,
             address_ventas: formData.tipo_de_entrega === 'recoger_en_sucursal' ? null : value
@@ -108,206 +135,332 @@ function CardCheckout() {
         }
     }, [error]);
 
+
+
     const handleSubmit = async (event) => {
         event.preventDefault();
-
+    
         // Validación de campos
         if (!formData.metodo_pago || !formData.tipo_de_entrega) {
-            setError('El metodo de Pago y Tipo de Entrega Son Obligatorios')
-            console.error('El campo metodo_pago y tipo_de_entrega son obligatorios.');
+            setError('El método de Pago y Tipo de Entrega son obligatorios');
             return;
         }
-
+    
         if (formData.tipo_de_entrega === 'entrega_en_domicilio' && !formData.address_ventas) {
-            setError('La dirección de entrega es obligatoria')
-
-            console.error('La dirección es obligatoria para la entrega en domicilio.');
+            setError('La dirección de entrega es obligatoria');
             return;
         }
-
+    
         if (formData.tipo_de_entrega === 'recoger_en_sucursal') {
-            formData.address_ventas = null; // Asignar null si es recoger en sucursal
+            formData.address_ventas = null;
         }
-
-        // Aquí puedes manejar el envío de los datos
-        console.log('Datos del formulario:', formData);
-
-        if (!formData.total || !formData.user_id) {
-            console.error('Todos los campos son obligatorios.');
-            return;
-        }
-
+    
         try {
-            // Paso 1: Enviar datos de la venta
+            // Enviar la venta
             const ventaData = { ...formData, user_id: user.user.id };
             const ventaResponse = await ventasUser(ventaData);
-
+    
             if (ventaResponse && ventaResponse.data) {
                 const ventaId = ventaResponse.data.id;
                 setVentaId(ventaId);
-
-                // Guardar ID de venta en localStorage
+                console.log(">>>", ventaId)
+                // Guardar el ID de la venta en localStorage
                 const key = `venta_${user.user.id}`;
                 const storedVentas = JSON.parse(localStorage.getItem(key)) || [];
                 const updatedVentas = [...storedVentas, ventaId];
                 localStorage.setItem(key, JSON.stringify(updatedVentas));
-
-                // Paso 2: Enviar detalles de la venta
+    
+                // Preparar los datos para detalles de la venta
                 const detVentaData = {
-                    detalles: compra.map(item => ({
-                        nom_producto: item.producto.nom_producto,
-                        pre_producto: item.producto.precio_producto,
-                        cantidad: item.cantidad,
-                        subtotal: item.producto.precio_producto * item.cantidad,
-                        venta_id: ventaId
-                    })),
-                    total: total
+                    detalles: compra.flatMap(item => {
+                
+                        console.log("tem", compra);
+                        console.log("teeem", item.producto.nom_promo);
+                        console.log("teeem", item.producto);
+                
+                        if (item.producto.detpromociones && item.producto.detpromociones.length > 0) {
+                            // Detalles de la promoción: mapeo de los productos dentro de las promociones
+                            return item.producto.detpromociones.map(promo => ({
+                                nom_producto: promo.producto.nom_producto, // Accede al nombre del producto
+                                pre_producto: promo.producto.
+                                precio_producto, // Accede al precio del producto
+                                cantidad: promo.cantidad, // Cantidad dentro de la promoción
+                                subtotal: promo.subtotal, // Subtotal calculado
+                                descuento: promo.descuento, // Descuento específico de la promoción
+                                porcentaje: promo.porcentaje || 20, // Porcentaje si existe, 0 si no
+                                promocione_id: promo.promocione_id, // ID de la promoción
+                                venta_id: ventaId // ID de la venta
+                            }));
+                
+                        } else {
+                            // Detalles de un producto normal (sin promoción)
+                            const nomProducto = item.producto.nom_producto ||0;
+                            const preProducto = item.producto.precio_producto || 1;
+                            const cantidad = parseInt(item.cantidad, 10);
+                            const subtotal = parseFloat(preProducto) * cantidad;
+                
+                            return [{
+                                nom_producto: nomProducto,
+                                pre_producto: preProducto,
+                                cantidad: cantidad,
+                                subtotal: subtotal,
+                                venta_id: ventaId
+                            }];
+                        }
+                    }),
+                    total: total // El total de la venta
                 };
+    
+                // Validación de datos
+                if (detVentaData.detalles.some(detalle => !detalle.nom_producto || isNaN(detalle.pre_producto) || isNaN(detalle.cantidad) || isNaN(detalle.subtotal))) {
+                    throw new Error('Datos inválidos en los detalles de la venta');
+                }
+    
+                console.log('Datos enviados:', detVentaData);
                 await detVentasUser(detVentaData);
-
-                // Actualizar carrito y almacenar compras
+    
+                // Actualizar localStorage y limpiar carrito
                 const cartKey = `cart_${user.user.id}`;
                 const comprasKey = `compras_${user.user.id}`;
                 const storedCart = JSON.parse(localStorage.getItem(cartKey)) || [];
                 const storedCompras = JSON.parse(localStorage.getItem(comprasKey)) || [];
                 const updatedCompras = [...storedCompras, ...storedCart];
                 localStorage.setItem(comprasKey, JSON.stringify(updatedCompras));
-
-                // Eliminar el carrito actual
+    
                 localStorage.removeItem(cartKey);
                 localStorage.removeItem(`cantidades_${user.user.id}`);
-
+    
+                // Limpiar estado
                 setCompra([]);
                 setTotal(0);
                 setOpen(true);  // Abrir el modal
             }
         } catch (error) {
-            console.error('Error al enviar la venta:', error.message);
+            console.error('Error al enviar los detalles de la venta:', error.message);
         }
     };
 
+    // const handleSubmit = async (event) => {
+    //     event.preventDefault();
+
+    //     // Validación de campos obligatorios
+    //     if (!formData.metodo_pago || !formData.tipo_de_entrega) {
+    //         setError('El método de Pago y Tipo de Entrega son obligatorios');
+    //         return;
+    //     }
+
+    //     // Validación de dirección en caso de entrega a domicilio
+    //     if (formData.tipo_de_entrega === 'entrega_en_domicilio' && !formData.address_ventas) {
+    //         setError('La dirección de entrega es obligatoria');
+    //         return;
+    //     }
+
+    //     // Si es recoger en sucursal, se borra la dirección
+    //     if (formData.tipo_de_entrega === 'recoger_en_sucursal') {
+    //         formData.address_ventas = null;
+    //     }
+
+    //     try {
+    //         // Preparar los datos para enviar la venta
+    //         const ventaData = {
+    //             ...formData,
+    //             user_id: user.user.id,
+    //             total: total // Asegúrate de enviar el total en la venta principal
+    //         };
+
+    //         const ventaResponse = await ventasUser(ventaData);
+
+    //         if (ventaResponse && ventaResponse.data) {
+    //             const ventaId = ventaResponse.data.id;
+    //             setVentaId(ventaId);
+
+    //             // Guardar el ID de la venta en localStorage
+    //             const key = `venta_${user.user.id}`;
+    //             const storedVentas = JSON.parse(localStorage.getItem(key)) || [];
+    //             const updatedVentas = [...storedVentas, ventaId];
+    //             localStorage.setItem(key, JSON.stringify(updatedVentas));
+
+    //             // Procesar los detalles de la venta (productos y promociones)
+    //             const detVentaData = {
+    //                 detalles: compra.map(item => {
+    //                     const nomProducto = item.producto.nom_producto || item.producto.nom_promo;
+    //                     const preProducto = item.producto.precio_producto || item.producto.total_promo;
+    //                     const cantidad = parseInt(item.cantidad, 10);
+    //                     const subtotal = parseFloat(preProducto) * cantidad;
+
+    //                     // Datos básicos de cada producto o promoción
+    //                     const detalle = {   
+    //                         nom_producto: nomProducto,
+    //                         pre_producto: preProducto,
+    //                         cantidad: cantidad,
+    //                         subtotal: subtotal,
+    //                         venta_id: ventaId
+    //                     };
+
+    //                     // Si es una promoción, agregar los campos adicionales
+    //                     if (item.producto.promocione_id) {
+    //                         detalle.descuento = item.producto.descuento || 0;
+    //                         detalle.porcentaje = item.producto.porcentaje || 0;
+    //                         detalle.promocione_id = item.producto.promocione_id;
+    //                     }
+
+    //                     return detalle;
+    //                 })
+    //             };
+
+    //             // Validación de los detalles de la venta
+    //             if (detVentaData.detalles.some(detalle => !detalle.nom_producto || isNaN(detalle.pre_producto) || isNaN(detalle.cantidad) || isNaN(detalle.subtotal))) {
+    //                 throw new Error('Datos inválidos en los detalles de la venta');
+    //             }
+
+    //             // Enviar los detalles de la venta
+    //             console.log('Datos enviados:', detVentaData);
+    //             await detVentasUser(detVentaData);
+
+    //             // Actualizar localStorage y limpiar carrito
+    //             const cartKey = `cart_${user.user.id}`;
+    //             const comprasKey = `compras_${user.user.id}`;
+    //             const storedCart = JSON.parse(localStorage.getItem(cartKey)) || [];
+    //             const storedCompras = JSON.parse(localStorage.getItem(comprasKey)) || [];
+    //             const updatedCompras = [...storedCompras, ...storedCart];
+    //             localStorage.setItem(comprasKey, JSON.stringify(updatedCompras));
+
+    //             localStorage.removeItem(cartKey);
+    //             localStorage.removeItem(`cantidades_${user.user.id}`);
+
+    //             // Limpiar estado
+    //             setCompra([]);
+    //             setTotal(0);
+    //             setOpen(true);  // Abrir el modal
+    //         }
+    //     } catch (error) {
+    //         console.error('Error al enviar los detalles de la venta:', error.message);
+    //     }
+    // };
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem' }}>
-            <Paper sx={{ padding: '2rem', width: '100%', maxWidth: '600px' }}>
+            <Paper sx={{ padding: '2rem', width: '100%', maxWidth: '800px' }}>
                 <StyledForm onSubmit={handleSubmit}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Box sx = {{ display: 'flex'}}>
-                            <Box>
-                                <TextField
-                                    disabled
-                                    sx={{ margin: '5px 0', width: '100%' }}
-                                    label="Nombres"
-                                    variant="outlined"
-                                    defaultValue={user ? user.user.name : ''}
-                                />
-                                <TextField
-                                    disabled
-                                    sx={{ margin: '5px 0', width: '100%' }}
-                                    label="Telefono"
-                                    type="number"
-                                    variant="outlined"
-                                    defaultValue={user ? user.user.tel : ''}
-                                />
-                                <TextField
-                                    sx={{ margin: '5px 0', width: '100%' }}
-                                    label="Direccion"
-                                    type="text"
-                                    variant="outlined"
-                                    onChange={handleChangeDireccion}
-                                    disabled={!isDireccionEnabled}
-                                />
-                                <TextField
-                                    disabled
-                                    sx={{ margin: '5px 0', width: '100%' }}
-                                    id="id"
-                                    label="Identificacion"
-                                    type="number"
-                                    variant="outlined"
-                                    defaultValue={user ? user.user.id : ''}
-                                />
-                                <FormControl fullWidth sx={{ margin: '5px 0' }}>
-                                    <InputLabel>Metodo de Pago</InputLabel>
-                                    <Select
-                                        label="Metodo de Pago"
-                                        value={formData.metodo_pago}
-                                        onChange={handleChangeMetodoPago}
-                                    >
-                                        <MenuItem value="tarjeta">Tarjeta</MenuItem>
-                                        <MenuItem value="efectivo">Efectivo</MenuItem>
-                                    </Select>
-                                </FormControl>
-                                <FormControl fullWidth sx={{ margin: '5px 0' }}>
-                                    <InputLabel>Tipo de Entrega</InputLabel>
-                                    <Select
-                                        label="Tipo de Entrega"
-                                        value={formData.tipo_de_entrega}
-                                        onChange={handleChangeTipoDeEntrega}
-                                    >
-                                        <MenuItem value="recoger_en_sucursal">Recoger en Sucursal</MenuItem>
-                                        <MenuItem value="entrega_en_domicilio">Entrega en Domicilio</MenuItem>
-                                    </Select>
-                                </FormControl>
-                            </Box>
-                            <Box sx = {{display:'flex', flexDirection:'column'}}>
-                                <Typography variant="h6" sx={{
-                                    fontWeight: 'bold', marginBottom: '0.5rem',
-                                    display: 'flex',
-                                    justifyContent: 'center'
-                                }}> Productos:</Typography>
-                                {compra.length > 0 ? (
-                                    <>
-                                        {compra.map((item) => (
-                                            <Paper key={item.id} sx={{ padding: '1rem', margin: '1rem 0' }}>
-                                                <Typography>
-                                                    {item.producto.nom_producto} - {item.cantidad} x ${item.producto.precio_producto}
-                                                </Typography>
-                                            </Paper>
-                                        ))}
-                                        <Typography variant="h6" sx={{ marginTop: '1rem' }}>
-                                            Valor Total: $ {total.toLocaleString('en-US')}
-                                        </Typography>
-                                    </>
-                                ) : (
-                                    <Typography variant="body1" align="center">
-                                        El carrito está vacío.
-                                    </Typography>
-                                )}
-                            </Box>
-
-
-
-               
-                        </Box>
+                    <Typography variant="h5" sx={{ marginBottom: '1rem' }}>
+                        Información de la Compra
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <TextField
+                            disabled
+                            label="Nombres"
+                            variant="outlined"
+                            defaultValue={user ? user.user.name : ''}
+                        />
+                        <TextField
+                            disabled
+                            label="Teléfono"
+                            type="number"
+                            variant="outlined"
+                            defaultValue={user ? user.user.tel : ''}
+                        />
+                        <TextField
+                            label="Dirección"
+                            type="text"
+                            variant="outlined"
+                            onChange={handleChangeDireccion}
+                            disabled={!isDireccionEnabled}
+                            value={formData.address_ventas || ''}
+                        />
+                        <TextField
+                            disabled
+                            label="Identificación"
+                            type="number"
+                            variant="outlined"
+                            defaultValue={user ? user.user.id : ''}
+                        />
+                        <FormControl fullWidth>
+                            <InputLabel>Método de Pago</InputLabel>
+                            <Select
+                                label="Método de Pago"
+                                value={formData.metodo_pago}
+                                onChange={handleChangeMetodoPago}
+                            >
+                                <MenuItem value="tarjeta">Tarjeta</MenuItem>
+                                <MenuItem value="efectivo">Efectivo</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <FormControl fullWidth>
+                            <InputLabel>Tipo de Entrega</InputLabel>
+                            <Select
+                                label="Tipo de Entrega"
+                                value={formData.tipo_de_entrega}
+                                onChange={handleChangeTipoDeEntrega}
+                            >
+                                <MenuItem value="recoger_en_sucursal">Recoger en Sucursal</MenuItem>
+                                <MenuItem value="entrega_en_domicilio">Entrega en Domicilio</MenuItem>
+                            </Select>
+                        </FormControl>
                     </Box>
-                    <Button type="submit" variant="contained" color="primary" sx={{ margin: '10px 0' }}>
-                                Finalizar Compra
-                            </Button>
+                    <Button type="submit" variant="contained" color="primary" sx={{ marginTop: '2rem' }}>
+                        Finalizar Compra
+                    </Button>
                 </StyledForm>
 
                 {error && (
-
-                    <Stack sx={{ width: '100%' }} spacing={2}>
+                    <Stack sx={{ width: '100%', marginTop: '1rem' }} spacing={2}>
                         <Alert severity="error">{error}</Alert>
                     </Stack>
-
                 )}
             </Paper>
+
+            <Paper sx={{ padding: '2rem', width: '100%', maxWidth: '800px', marginTop: '2rem' }}>
+                <Typography variant="h6" sx={{ marginBottom: '1rem' }}>
+                    Productos en el Carrito
+                </Typography>
+                {compra.length > 0 ? (
+                    <>
+                        {compra.map((item, index) => {
+                            // Define los precios con valores predeterminados si no están disponibles
+                            const precioProducto = item.producto.precio_producto ? parseFloat(item.producto.precio_producto) : 0;
+                            const precioPromo = item.producto.total_promo ? parseFloat(item.producto.total_promo) : 0;
+
+                            // Usa el precio de la promoción si está disponible, de lo contrario usa el precio del producto
+                            const precio = precioPromo > 0 ? precioPromo : precioProducto;
+
+                            // Calcula el subtotal
+                            const subtotal = precio * (item.cantidad ? parseInt(item.cantidad, 10) : 0);
+
+                            return (
+                                <Paper key={index} sx={{ padding: '1rem', margin: '0.5rem 0' }}>
+                                    <Typography>
+                                        {item.producto.nom_producto || item.producto.nom_promo} - {item.cantidad} x ${precio.toFixed(2)}
+                                    </Typography>
+                                    <Typography>
+                                        Subtotal: ${subtotal.toFixed(2)}
+                                    </Typography>
+                                </Paper>
+                            );
+                        })}
+                        <Typography variant="h6" sx={{ marginTop: '1rem' }}>
+                            Total: ${!isNaN(total) ? total.toFixed(2) : '0.00'}
+                        </Typography>
+                    </>
+                ) : (
+                    <Typography>No hay productos en el carrito.</Typography>
+                )}
+            </Paper>
+
             <Modal
                 open={open}
                 onClose={handleClose}
                 closeAfterTransition
-                BackdropProps={{ timeout: 500 }}
             >
                 <Fade in={open}>
                     <ModalContent>
                         <Typography variant="h6" gutterBottom>
-                            ¡Compra realizada con éxito!
+                            Compra Realizada con Éxito
                         </Typography>
                         <Typography variant="body1">
-                            Tu ID de venta es: {ventaId}
+                            ¡Gracias por tu compra! Recuerda que en tu Perfil podras decargar el Comprobante.
                         </Typography>
-                        <Button variant="contained" color="primary" onClick={handleClose} sx={{ marginTop: '1rem' }}>
-                            Volver al Inicio
+                        <Button onClick={handleClose} variant="contained" color="primary" sx={{ marginTop: '1rem' }}>
+                            Cerrar
                         </Button>
                     </ModalContent>
                 </Fade>
@@ -317,3 +470,4 @@ function CardCheckout() {
 }
 
 export default CardCheckout;
+

@@ -1,7 +1,8 @@
 import axios from 'axios';
-
+import refresh_token from './token';
 const API_URL = 'http://arcaweb.test/api/V1/ventas';
 const API_DET_URL = 'http://arcaweb.test/api/V1/detventas';
+const API_DET_PROMO = 'http://arcaweb.test/api/V1/detpromociones';
 const API_DELETE_URL = 'http://arcaweb.test/api/V1/ventas';
 const API_COMPRAS_URL = 'http://arcaweb.test/api/V1/users';
 
@@ -93,8 +94,11 @@ export const detVentasUser = async (detVentaData) => {
             }
         });
         if (response.status === 200 || response.status === 201) {
-            console.log('Detalle de venta creado correctamente');
-            return response.data;
+            console.log('Detalle de venta creado correctamente', response.data);
+            // return response.data;
+
+            
+
         } else {
             throw new Error('Error en la respuesta del servidor');
         }
@@ -139,6 +143,71 @@ export const detVentasUser = async (detVentaData) => {
         }
     }
 };
+
+//promociones
+export const detPromocionUser = async (detPromocionData) => {
+    let token = getToken(); 
+    if (!token) {
+        throw new Error('Token no disponible');
+    }
+    try {
+        const response = await axios.post(API_DET_PROMO, detPromocionData, {
+            headers: {
+                'Authorization': `Bearer ${token}`,  // Incluye el token en las cabeceras
+                'Content-Type': 'application/json',
+            }
+        });
+        if (response.status === 200 || response.status === 201) {
+            console.log('Detalle de promocion creado correctamente', response.data);
+            // return response.data;
+
+            
+
+        } else {
+            throw new Error('Error en la respuesta del servidor');
+        }
+    } catch (error) {
+        console.error('Error al enviar los detalles de promocion:', error);
+        
+        if (error.response?.status === 401) {
+            try {
+                const newSession = await refresh_token(); 
+                if (newSession && newSession.token?.access_token) {
+                    token = newSession.token.access_token;
+                    setToken(token);
+
+                    const retryResponse = await axios.post(API_URL, ventaData, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (retryResponse.status === 201) {
+                        console.log('promocion creada correctamente');
+                        return retryResponse.data;
+                    } else {
+                        throw new Error('Error en la respuesta del servidor al reintentar');
+                    }
+                } else {
+                    throw new Error('No se pudo obtener un nuevo token de acceso');
+                }
+            } catch (refreshError) {
+                console.error('Error al refrescar el token:', refreshError);
+                throw refreshError;
+            }
+        }
+
+        if (axios.isAxiosError(error)) {
+            const errorMessage = error.response?.data?.error || 'Error desconocido';
+            throw new Error(errorMessage);
+            
+        } else {
+            throw new Error('No se pudo conectar con el servidor');
+        }
+    }
+};
+
 
 export const deleteVentaUser = async (id) => {
     let token = getToken(); // Usa let para permitir la actualización del token

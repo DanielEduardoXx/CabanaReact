@@ -11,7 +11,10 @@ import ContinuaCompra from './components/users/common/ContinuaCompra';
 import CardCheckout from './components/users/common/CardCheckout';
 import Footer from './components/users/Footer.jsx';
 import BtnCarrito from './components/users/common/BtnInfoCarrito.jsx';
-import { MyContext } from './services/MyContext.jsx';
+import SolicitudEmail from './components/users/common/SolicitudEmail.jsx';
+import CodeEmailConfirmation from './components/users/common/CodeEmailConfirmation.jsx';
+import { MyContext } from './services/MyProvider.jsx';
+// import { ImagenesProvider } from './services/MyContext.jsx';
 
 const UserApp = () => {
     const{user}=
@@ -19,8 +22,8 @@ const UserApp = () => {
 
   return (
     <>
-      <MenuLink />
-      <BtnCarrito />
+    <MenuLink />
+    <BtnCarrito />
       <Routes>
         <Route path="inicio" element={<Inicio />} />
         <Route path="productos" element={<Productos />} />
@@ -29,9 +32,11 @@ const UserApp = () => {
         <Route path="perfil" element={<CardPerfil />} />
         <Route path="continua compra" element={<ContinuaCompra />} />
         <Route path="checkout" element={<CardCheckout />} />
+        <Route path="SolicitudEmail" element={<SolicitudEmail />} />
+        <Route path="CodeEmailConfirmation" element={<CodeEmailConfirmation />} />
       </Routes>
-      <Footer />
-    </>
+    <Footer />
+  </>
   );
 };
 

@@ -19,9 +19,15 @@ import CardTotal from "./common/CardTotal";
 import { allProductosCat } from "../../services/productosxCat";
 import { getProductos } from '../../services/productos';
 import { addCompra, getCompras, updateFront, deleteCompras, mergeCarts } from "../../hooks/useCompras";
+import get_imagenes_produc from "../../services/get_imagenes_prod.js";
+import { allPromociones } from "../../services/categorias.js";
+import axios from 'axios';
+import { throttle } from 'lodash';
+
+// import { useImagenes } from "../../services/MyContext.jsx";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props}/>;
+  return <Slide direction="up" ref={ref} {...props} />;
 });
 
 const style = {
@@ -44,6 +50,7 @@ function Productos() {
   const { user } = useContext(MyContext);
   const userId = user && user.user ? String(user.user.id) : "guest"; // Asegurarse de que userId sea una cadena
   const [productos, setProductos] = useState([]);
+  const [promociones, setPromociones] = useState([]);
   const [filtro, setFiltro] = useState([]);
   const [loading, setLoading] = useState(false);
   const [compra, setCompra] = useState([]);
@@ -52,6 +59,9 @@ function Productos() {
   const [open, setOpen] = useState(false);
   const [productoEditado, setProductoEditado] = useState({});
   const [openDialog, setOpenDialog] = useState(false);
+  const [fotosProductos, setFotosProductos] = useState({});
+  const [loadedImages, setLoadedImages] = useState({}); // Estado para rastrear imágenes cargadas
+  // const { cargarImagenes } = useImagenes();
 
   const [compras, setCompras] = useState(getCompras(userId));
   const [noCompras, setNoCompras] = useState(compras.length);
@@ -99,17 +109,69 @@ function Productos() {
     setFiltro(nuevoFiltro);
   };
 
+  const cargarImagenesConCache = async (productos) => {
+    const nuevasFotos = {};
+    for (const producto of productos) {
+      const cachedImage = sessionStorage.getItem(`imagen_${producto.id}`);
+      if (cachedImage) {
+        nuevasFotos[producto.id] = cachedImage;
+      } else if (!fotosProductos[producto.id]) {
+        const imagenes = await get_imagenes_produc(producto.id);
+        if (imagenes && imagenes.length > 0) {
+          const imageUrl = `http://arcaweb.test/${imagenes[0].path}`;
+          nuevasFotos[producto.id] = imageUrl;
+          sessionStorage.setItem(`imagen_${producto.id}`, imageUrl);
+        }
+      }
+    }
+    setFotosProductos((prevFotos) => ({ ...prevFotos, ...nuevasFotos }));
+  };
+
+  const cargarImagenesThrottledConCache = throttle(cargarImagenesConCache, 2000); // Límite de 2 segundos entre solicitudes
+
   const handleCategoriaSelect = async (categoriaId) => {
     setLoading(true);
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     try {
-      const productos = categoriaId ? await allProductosCat(categoriaId) : await getProductos();
+      let productos;
+      if (categoriaId === 5) {
+        // Si la categoría seleccionada es promociones, llama a la API de promociones
+        productos = await allPromociones(signal);
+      } else {
+        productos = categoriaId
+          ? await allProductosCat(categoriaId, signal)
+          : await getProductos(signal);
+      }
+
       setProductos(productos);
+      cargarImagenesThrottledConCache(productos); // Usa la función con throttling
+
     } catch (error) {
       console.error('Error fetching productos:', error);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('Request data:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
       setProductos([]);
+
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+
+    return () => controller.abort();
   };
+
+  // Cargar todos los productos al montar el componente
+  useEffect(() => {
+    handleCategoriaSelect(null);
+  }, []);
 
   const handleOpenDialog = () => setOpenDialog(true);
   const handleCloseDialog = () => setOpenDialog(false);
@@ -138,8 +200,14 @@ function Productos() {
   useEffect(() => {
     let newTotal = 0;
     compra.forEach(item => {
-      const precio = parseFloat(item.producto.precio_producto);
+      const precioProducto = item.producto.precio_producto ? parseFloat(item.producto.precio_producto) : 0;
+      const precioPromo = item.producto.total_promo ? parseFloat(item.producto.total_promo) : 0;
+      
+      // Usamos precioPromo si está disponible, de lo contrario usamos precioProducto
+      const precio = precioPromo > 0 ? precioPromo : precioProducto;
+      
       const cantidad = parseInt(item.cantidad, 10);
+      
       if (!isNaN(precio) && !isNaN(cantidad)) {
         newTotal += precio * cantidad;
       }
@@ -174,20 +242,16 @@ function Productos() {
     if (nuevaCompra.length === 0) setOpen(false);
   };
 
-    // Cargar todos los productos al montar el componente
-    useEffect(() => {
-      handleCategoriaSelect(null);
-    }, []);
-
   const ruta = "../../../../public";
 
   return (
     <Box sx={{ bgcolor: "#ffffff" }}>
-      <MenuCategoria 
-        getValor={handleCategoriaSelect} 
-        noCompras={noCompras} 
-        openModal={handleOpen} 
+      <MenuCategoria
+        getValor={handleCategoriaSelect}
+        noCompras={noCompras}
+        openModal={handleOpen}
       />
+
       {!loading ? (
         <CardProducto
           productos={productos}
@@ -195,6 +259,7 @@ function Productos() {
           actualizarCantidad={actualizarCantidad}
           eliminarProducto={eliminarProducto}
           noProductos={noCompras}
+          fotosProductos={fotosProductos}  // Pasar las imágenes como prop
         />
       ) : (
         <Box sx={{ width: "100%" }}>
@@ -202,11 +267,11 @@ function Productos() {
         </Box>
       )}
 
-      <Modal 
-        style={{ zIndex: "20" }} 
-        open={open} 
-        onClose={handleClose} 
-        aria-labelledby="modal-modal-title" 
+      <Modal
+        style={{ zIndex: "20" }}
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
@@ -215,10 +280,10 @@ function Productos() {
               <CardDetalleCarrito
                 key={item.id}
                 id={item.id}
-                titulo={item.producto.nom_producto}
-                precio={item.producto.precio_producto}
-                foto={item.producto.foto || `${ruta}/Hamburguesas.jpg`}
-                noProductos={item.cantidad}
+                titulo={item.producto.nom_promo || item.producto.nom_producto || "Título no disponible"}
+                precio={item.producto.precio_producto || item.producto.total_promo || 0}
+                foto={loadedImages[item.id] || `${ruta}/Hamburguesas.jpg`}
+                noProductos={item.cantidad || 0}
                 monitor={actualizarCantidad}
                 eliminar={eliminarProducto}
               />
@@ -232,12 +297,12 @@ function Productos() {
         </Box>
       </Modal>
 
-      <Dialog 
-        style={{ zIndex: "100" }} 
-        open={openDialog} 
-        TransitionComponent={Transition} 
-        keepMounted 
-        onClose={handleCloseDialog} 
+      <Dialog
+        style={{ zIndex: "100" }}
+        open={openDialog}
+        TransitionComponent={Transition}
+        keepMounted
+        onClose={handleCloseDialog}
         aria-describedby="alert-dialog-slide-description"
       >
         <DialogTitle>
