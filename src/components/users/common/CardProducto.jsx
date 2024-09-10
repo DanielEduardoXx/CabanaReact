@@ -79,6 +79,7 @@ function CardProducto({ productos, fotosProductos, agregarCompra, actualizarCant
     );
   }
 
+  let ruta = '../../../../public/'
   return (
     <Box sx={{ padding: "2rem", margin: "1rem" }}>
       <Grid container spacing={3}>
