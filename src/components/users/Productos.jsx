@@ -21,7 +21,6 @@ import { getProductos } from '../../services/productos';
 import { addCompra, getCompras, updateFront, deleteCompras, mergeCarts } from "../../hooks/useCompras";
 import get_imagenes_produc from "../../services/get_imagenes_prod.js";
 import { allPromociones } from "../../services/categorias.js";
-import axios from 'axios';
 import { throttle } from 'lodash';
 
 // import { useImagenes } from "../../services/MyContext.jsx";
@@ -188,7 +187,11 @@ function Productos() {
   };
 
   const handleCheckout = () => {
-    navigate(user ? '/checkout' : '/continua compra');
+    navigate(user ? '/checkout' 
+      : 
+ '/iniciar-sesion'
+      
+   );
   };
 
   useEffect(() => {
