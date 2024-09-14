@@ -187,7 +187,7 @@ function CardCheckout() {
                                 cantidad: promo.cantidad, // Cantidad dentro de la promoción
                                 subtotal: promo.subtotal, // Subtotal calculado
                                 descuento: promo.descuento, // Descuento específico de la promoción
-                                porcentaje: promo.porcentaje || 20, // Porcentaje si existe, 0 si no
+                                porcentaje: promo.porcentaje || 18, // Porcentaje si existe, 0 si no
                                 promocione_id: promo.promocione_id, // ID de la promoción
                                 venta_id: ventaId // ID de la venta
                             }));
@@ -239,104 +239,6 @@ function CardCheckout() {
             console.error('Error al enviar los detalles de la venta:', error.message);
         }
     };
-
-    // const handleSubmit = async (event) => {
-    //     event.preventDefault();
-
-    //     // Validación de campos obligatorios
-    //     if (!formData.metodo_pago || !formData.tipo_de_entrega) {
-    //         setError('El método de Pago y Tipo de Entrega son obligatorios');
-    //         return;
-    //     }
-
-    //     // Validación de dirección en caso de entrega a domicilio
-    //     if (formData.tipo_de_entrega === 'entrega_en_domicilio' && !formData.address_ventas) {
-    //         setError('La dirección de entrega es obligatoria');
-    //         return;
-    //     }
-
-    //     // Si es recoger en sucursal, se borra la dirección
-    //     if (formData.tipo_de_entrega === 'recoger_en_sucursal') {
-    //         formData.address_ventas = null;
-    //     }
-
-    //     try {
-    //         // Preparar los datos para enviar la venta
-    //         const ventaData = {
-    //             ...formData,
-    //             user_id: user.user.id,
-    //             total: total // Asegúrate de enviar el total en la venta principal
-    //         };
-
-    //         const ventaResponse = await ventasUser(ventaData);
-
-    //         if (ventaResponse && ventaResponse.data) {
-    //             const ventaId = ventaResponse.data.id;
-    //             setVentaId(ventaId);
-
-    //             // Guardar el ID de la venta en localStorage
-    //             const key = `venta_${user.user.id}`;
-    //             const storedVentas = JSON.parse(localStorage.getItem(key)) || [];
-    //             const updatedVentas = [...storedVentas, ventaId];
-    //             localStorage.setItem(key, JSON.stringify(updatedVentas));
-
-    //             // Procesar los detalles de la venta (productos y promociones)
-    //             const detVentaData = {
-    //                 detalles: compra.map(item => {
-    //                     const nomProducto = item.producto.nom_producto || item.producto.nom_promo;
-    //                     const preProducto = item.producto.precio_producto || item.producto.total_promo;
-    //                     const cantidad = parseInt(item.cantidad, 10);
-    //                     const subtotal = parseFloat(preProducto) * cantidad;
-
-    //                     // Datos básicos de cada producto o promoción
-    //                     const detalle = {   
-    //                         nom_producto: nomProducto,
-    //                         pre_producto: preProducto,
-    //                         cantidad: cantidad,
-    //                         subtotal: subtotal,
-    //                         venta_id: ventaId
-    //                     };
-
-    //                     // Si es una promoción, agregar los campos adicionales
-    //                     if (item.producto.promocione_id) {
-    //                         detalle.descuento = item.producto.descuento || 0;
-    //                         detalle.porcentaje = item.producto.porcentaje || 0;
-    //                         detalle.promocione_id = item.producto.promocione_id;
-    //                     }
-
-    //                     return detalle;
-    //                 })
-    //             };
-
-    //             // Validación de los detalles de la venta
-    //             if (detVentaData.detalles.some(detalle => !detalle.nom_producto || isNaN(detalle.pre_producto) || isNaN(detalle.cantidad) || isNaN(detalle.subtotal))) {
-    //                 throw new Error('Datos inválidos en los detalles de la venta');
-    //             }
-
-    //             // Enviar los detalles de la venta
-    //             console.log('Datos enviados:', detVentaData);
-    //             await detVentasUser(detVentaData);
-
-    //             // Actualizar localStorage y limpiar carrito
-    //             const cartKey = `cart_${user.user.id}`;
-    //             const comprasKey = `compras_${user.user.id}`;
-    //             const storedCart = JSON.parse(localStorage.getItem(cartKey)) || [];
-    //             const storedCompras = JSON.parse(localStorage.getItem(comprasKey)) || [];
-    //             const updatedCompras = [...storedCompras, ...storedCart];
-    //             localStorage.setItem(comprasKey, JSON.stringify(updatedCompras));
-
-    //             localStorage.removeItem(cartKey);
-    //             localStorage.removeItem(`cantidades_${user.user.id}`);
-
-    //             // Limpiar estado
-    //             setCompra([]);
-    //             setTotal(0);
-    //             setOpen(true);  // Abrir el modal
-    //         }
-    //     } catch (error) {
-    //         console.error('Error al enviar los detalles de la venta:', error.message);
-    //     }
-    // };
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem' }}>
