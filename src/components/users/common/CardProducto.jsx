@@ -117,9 +117,10 @@ function CardProducto({ productos, fotosProductos, agregarCompra, actualizarCant
                         {item.detpromociones && item.detpromociones.length > 0
                         // agregamos index para que el separador br no se aplique al ultimo elemento
                           ? item.detpromociones.map((promo, index) => (
-                         
+                        
                             <span key={index}>
-                              *{promo.producto.detalle}
+                            
+                              *{promo.cantidad + " " + promo.producto.detalle}
                               {index < item.detpromociones.length - 1 && <br />}
                             </span>
                           ))
