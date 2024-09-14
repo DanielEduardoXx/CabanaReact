@@ -38,7 +38,7 @@ function BtnCarrito() {
             setVentaIds(storedVentaIds);
 
             const newTotal = storedCompras.reduce(
-                (acc, compra) => acc + compra.producto.precio_producto * compra.cantidad,
+                (acc, compra) => acc + compra.producto.precio_producto  || compra.producto.total_promo  * compra.cantidad,
                 0
             );
             setTotal(newTotal);
@@ -133,7 +133,7 @@ function BtnCarrito() {
                                         {compras.map((compra, index) => (
                                             <Paper key={index} sx={{ padding: '1rem', margin: '1rem 0', position: 'relative' }}>
                                                 <Typography>
-                                                    {compra.producto.nom_producto} - {compra.cantidad} x ${compra.producto.precio_producto}
+                                                    {compra.producto.nom_producto || compra.producto.nom_promo} - {compra.cantidad} x ${compra.producto.precio_producto || compra.producto.total_promo}
                                                 </Typography>
                                                 <IconButton
                                                     aria-label="delete"
