@@ -5,13 +5,12 @@ import { updateUser } from "../../../services/updateUser";
 import { MyContext } from "../../../services/MyContext";
 import AlertDesconectado from "./AlertDesconectado";
 import PicRegistro from "./PicRegistro";
-import fotoPerfil from '../../../services/fotoPerfil.js';
+import { fotoPerfil, updateFoto, fetchProfileImage, eliminarFoto } from '../../../services/fotoPerfil.js';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import TablaInformacion from "./TablaComprasUser.jsx";
 import { getAllCompras } from "../../../services/ventasUser.js";
 import { useNavigate } from "react-router-dom";
-
 
 const style = {
     position: 'absolute',
@@ -28,6 +27,8 @@ const StyledForm = styled('form')(({ theme }) => ({
     '& > *': {},
 }));
 
+
+
 const Perfil = () => {
     const [selectedImage, setSelectedImage] = useState(null);
     const { user, setUser } = useContext(MyContext);
@@ -39,6 +40,7 @@ const Perfil = () => {
     const [compras, setCompras] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const [btnActualizarfoto, setBtnActualizarfoto] = useState(false)
     const [formData, setFormData] = useState({
         id: '',
         name: '',
@@ -47,6 +49,8 @@ const Perfil = () => {
         tel: ''
     });
     const userId = user?.user?.id;
+
+
 
     useEffect(() => {
         const fetchCompras = async () => {
@@ -65,8 +69,24 @@ const Perfil = () => {
         fetchCompras();
     }, [userId]);
 
+    //Boton de actualizar Foto de  Perfil
+    const BtnUpdateFotoPerfil = ({ habilitarBtnUpdate }) => {
+        return (
+            <Button
+                type="submit"
+                variant="contained"
+                sx={{ marginTop: '1rem ' }}
+                onClick={handleChangeFoto}
+                style={{ display: habilitarBtnUpdate ? 'block' : 'none' }}
+            >
+                Actualizar
+            </Button>
+        );
+    };
+
     useEffect(() => {
         if (user && user.user) {
+            // Configurar los datos del formulario
             setFormData({
                 id: user.user.id || '',
                 name: user.user.name || '',
@@ -75,48 +95,36 @@ const Perfil = () => {
                 tel: user.user.tel || ''
             });
 
-            // Realizar la solicitud para obtener la ruta de la imagen
-            const fetchProfileImage = async () => {
-                const token = JSON.parse(sessionStorage.getItem('user'))?.token?.access_token;
-
-                if (!token) {
-                    console.error('No se encontró un token de autenticación');
-                    return;
-                }
-
+            // Realizar la solicitud para obtener la imagen de perfil
+            const fetchProfile = async () => {
                 try {
-                    const response = await fetch(`http://arcaweb.test/api/V1/images/users/${user.user.id}`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
+                    // Llamada a la función fetchProfileImage que ya importaste
+                    const { fullImageUrl } = await fetchProfileImage(user.user.id);
 
-                    if (!response.ok) {
-                        throw new Error('Error en la solicitud: ' + response.statusText);
-                    }
+                    // Actualizar el estado de la imagen de perfil con la URL obtenida
+                    setProfileImage(fullImageUrl);
 
-                    const data = await response.json();
-                    const imageUrl = data.data.path; // Ajusta esto según la estructura de la respuesta
-                    setProfileImage(`http://arcaweb.test/${imageUrl}`);
-                    console.log('respuesta:', response);
-                    console.log('>>:', imageUrl);
+                    console.log('URL de la imagen:', fullImageUrl);
                 } catch (error) {
-                    console.error('Error al cargar la imagen de perfil:', error);
+                    console.error('Error al obtener la imagen de perfil:', error);
 
-
+                    // Limpiar la imagen de perfil en caso de error
                     setProfileImage(null);
+                    sessionStorage.removeItem('profileImage'); // Eliminar la imagen si hubo un error
                 }
             };
 
-            fetchProfileImage();
+            fetchProfile();
         }
     }, [user]);
+
 
 
     const handleOpen = () => setOpen(true);
     const handleOpenCompras = () => setOpenCompras(true);
     const handleOpenModalFoto = () => setOpenModalFoto(true);
+
+
 
 
     const handleClose = () => {
@@ -153,6 +161,130 @@ const Perfil = () => {
             setSelectedImage(file);
             setMessage(`Seleccionado: ${file.name}`); // Limpiar el mensaje al seleccionar un archivo válido
             console.log('Archivo seleccionado:', file.name);
+
+            //Boton de Actualizar Foto
+            if (setSelectedImage) {
+                setBtnActualizarfoto(true)
+            } else {
+                setBtnActualizarfoto(false)
+            }
+
+
+
+        }
+    };
+
+
+
+
+    // Función para manejar el cambio de foto
+    const handleChangeFoto = async (e) => {
+        e.preventDefault();
+        const userId = user?.user?.id;
+
+        if (!userId) {
+            setMessage("User ID is undefined");
+            return;
+        }
+
+        try {
+            // Verificar que haya una imagen seleccionada
+            if (!selectedImage) {
+                setMessage('Por favor seleccione una imagen para actualizar.');
+                return;
+            }
+
+            // Crear una nueva instancia de FormData
+            const formData = new FormData();
+            formData.append('imageable_type', 'users');
+            formData.append('imageable_id', userId);
+            formData.append('image', selectedImage);
+
+            // Mostrar el contenido de FormData en la consola
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+            }
+
+            // Intentar obtener el imageId desde sessionStorage (si ya se subió una imagen antes)
+            let imageId = sessionStorage.getItem('profileImageId');
+
+            if (!imageId) {
+                // Si no hay imageId, significa que no hay una imagen existente, por lo que se creará una nueva
+                console.log('No hay imagen, creando una nueva...');
+
+                try {
+                    // Crear nueva imagen
+                    imageId = await fotoPerfil(userId, selectedImage);
+                    setMessage('Imagen de perfil creada con éxito');
+                } catch (error) {
+                    setMessage('Error al crear la imagen: ' + error.message);
+                    return;
+                }
+
+                // Guardar el nuevo imageId en sessionStorage para futuras actualizaciones
+                sessionStorage.setItem('profileImageId', imageId);
+            } else {
+                // Si ya existe una imagen, actualízala
+                console.log('Imagen existente, actualizando...');
+
+                try {
+                    await updateFoto(imageId, userId, selectedImage);
+                    setMessage('Foto de Perfil actualizada con éxito');
+                } catch (error) {
+                    setMessage('Error al actualizar la imagen: ' + error.message);
+                    return;
+                }
+            }
+
+            window.location.reload(); // Recargar la página después de actualizar o crear la imagen
+        } catch (error) {
+            setMessage('Error inesperado: ' + error.message);
+        }
+    };
+
+
+
+    // Función para eliminar el cambio de foto
+    const handleEliminarFoto = async (e) => {
+        e.preventDefault();
+        const userId = user?.user?.id;
+
+        if (!userId) {
+            setMessage("User ID is undefined");
+            return;
+        }
+
+        try {
+
+            // Crear una nueva instancia de FormData
+            const formData = new FormData();
+            formData.append('imageable_type', 'users');
+            formData.append('imageable_id', userId);
+
+            // Mostrar el contenido de FormData en la consola
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}:`, value);
+            }
+
+            // Intentar obtener el imageId desde sessionStorage (si ya se subió una imagen antes)
+            let imageId = sessionStorage.getItem('profileImageId');
+
+
+            try {
+                // Eliminar la imagen
+                imageId = await eliminarFoto( imageId, userId );
+                setMessage('Imagen de perfil Eliminada con éxito');
+            } catch (error) {
+                setMessage('Error al Eliminar la imagen: ' + error.message);
+                return;
+            }
+
+            // Eliminar imageId en sessionStorage para futuras actualizaciones
+            sessionStorage.removeItem('profileImageId', imageId);
+
+            window.location.reload(); // Recargar la página después de actualizar o crear la imagen
+        } catch (error) {
+            setMessage('Error inesperado: ' + error.message);
         }
     };
 
@@ -166,11 +298,6 @@ const Perfil = () => {
         }
 
         try {
-            if (selectedImage) {
-                // Llamar a la función fotoPerfil para subir la imagen
-                await fotoPerfil(userId, selectedImage);
-            }
-
             const updatedData = {
                 id: formData.id || user.user.id,
                 name: formData.name || user.user.name,
@@ -301,8 +428,6 @@ const Perfil = () => {
                                     </Box>
 
 
-
-
                                 </StyledForm>
                             </Box>
                         </Modal>
@@ -336,7 +461,7 @@ const Perfil = () => {
 
                                 </Box>
 
-                                <Box sx = {{ display:'flex', justifyContent:'space-between', margin:'1rem 0 1rem 0'}} >
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', margin: '1rem 0 1rem 0' }} >
 
                                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                                         <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} id="file-upload" />
@@ -346,14 +471,13 @@ const Perfil = () => {
 
                                     </Box>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                        <input type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} id="file-upload" />
-                                        <label htmlFor="file-upload">
-                                            <Button variant="contained" component="span">Eliminar Imagen</Button>
-                                        </label>
 
+                                        <Button type="submit"
+                                            variant="contained"
+                                            onClick={handleEliminarFoto}>Eliminar Imagen
+                                        </Button>
                                     </Box>
                                 </Box>
-
 
                                 {message && (
 
@@ -362,12 +486,21 @@ const Perfil = () => {
                                     </Stack>
 
                                 )}
+
+                                <StyledForm noValidate autoComplete="off" onSubmit={handleSubmit} sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                                    <BtnUpdateFotoPerfil habilitarBtnUpdate={btnActualizarfoto} />
+                                </StyledForm>
+
+
+
+
+
                             </Box>
 
                         </Modal>
                     </Box>
-                </Paper>
-            </Box>
+                </Paper >
+            </Box >
         </>
     );
 }
