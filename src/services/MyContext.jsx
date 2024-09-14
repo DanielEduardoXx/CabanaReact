@@ -8,7 +8,7 @@ export const MyContext = createContext({
   setUser: () => { },
 });
 
-const INACTIVITY_TIMEOUT = 50000000; // 1 minuto de inactividad
+const INACTIVITY_TIMEOUT = 5000000; // 1 minuto de inactividad
 
 export const MyProvider = ({ children }) => {
   const navigate = useNavigate();
@@ -40,10 +40,12 @@ export const MyProvider = ({ children }) => {
       sessionStorage.setItem("user", JSON.stringify(user));
       resetInactivityTimer();
     } else {
-      sessionStorage.removeItem("user");
-      setOpen(false); // Cierra el modal si no hay usuario
-      setUser(null); // Limpiar datos del usuario después de la inactividad
-      navigate("/iniciar-sesion"); // Redirige al login
+      if(!resetInactivityTimer){
+        sessionStorage.removeItem("user");
+        setOpen(false); // Cierra el modal si no hay usuario
+        setUser(null); // Limpiar datos del usuario después de la inactividad
+        navigate('iniciar-sesion')
+      }
 
     };
 
