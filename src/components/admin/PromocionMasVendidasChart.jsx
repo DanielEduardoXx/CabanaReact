@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Column } from '@ant-design/charts';
-//import axios from 'axios';
-//import { MyContext } from '../../services/MyContext'; // Asegúrate de que la ruta sea correcta
+import axios from 'axios';
+import { MyContext } from '../../services/MyContext'; // Asegúrate de que la ruta sea correcta
 
 const PromocionMasVendidasChart = () => {
   const [data, setData] = useState([]);
-  //const { user } = useContext(MyContext);
-  //const END_POINT = "http://arcaweb.test/api/V1";
+  const { user } = useContext(MyContext);
+  const END_POINT = "http://arcaweb.test/api/V1";
 
 
-  useEffect(() => {
+ /* useEffect(() => {
     // Datos mokqueados
     const mockData = [
       { promocion: 'san pedro', unidades: 1200 },
@@ -49,16 +49,16 @@ const PromocionMasVendidasChart = () => {
   };
 
   return <Column {...config} />;
-};
+};*/
 
- /* useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       const userSession = JSON.parse(sessionStorage.getItem('user'));
       const token = userSession?.token?.access_token;
 
       if (user && token) {
         try {
-          const response = await axios.get(`${END_POINT}/promocionMasUnidadesVendidas`, {
+          const response = await axios.get(`${END_POINT}/promocion-vendidas`, {
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
           });
           if (response.status === 200) {
@@ -104,6 +104,6 @@ const PromocionMasVendidasChart = () => {
   };
 
   return <Column {...config} />;
-};*/
+};
 
 export default PromocionMasVendidasChart;

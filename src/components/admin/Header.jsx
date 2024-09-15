@@ -14,6 +14,12 @@ const Header = ({ onSearch }) => {
   const { user, setUser } = useContext(MyContext);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
+   // Define una imagen por defecto
+   const defaultImagePath = "/pollo.png";
+
+   // Usa el operador de coalescencia nula (??) para manejar casos donde la imagen no existe
+   const imagePath = user?.user?.images?.path ?? defaultImagePath;
+
   const handleAvatarClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -101,8 +107,11 @@ const Header = ({ onSearch }) => {
             onClick={handleAvatarClick}
           >
             <img
-              src="http:./public/pollo.png"
-              alt="Admin"
+              // Utiliza la URL que viene del contexto MyContext
+          
+             src={`http://localhost/${imagePath}`}
+             alt={'admin'}
+             onError={(e) => e.currentTarget.src = defaultImagePath}
               style={{
                 width: '40px',
                 height: '40px',
