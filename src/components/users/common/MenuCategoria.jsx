@@ -5,6 +5,7 @@ import { allCategorias } from "../../../services/categorias";
 import get_imagenes_cat from '../../../services/get_imagenes_cat';
 import { throttle } from 'lodash';
 import LazyLoad from "react-lazyload";
+import LoadingComponent from './LoadingComponent';
 
 function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
   const [data, setData] = useState([]);
@@ -24,14 +25,12 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
     const getData = async () => {
       try {
         const categoriasResult = await allCategorias();
-        console.log("Categorias Result:", categoriasResult);  // Verificar el resultado
         if (isMounted) {
           setData(Array.isArray(categoriasResult) ? categoriasResult : []);
           setLoading(false);
         }
         cargarImagenesThrottledConCache(categoriasResult);
       } catch (err) {
-        console.error("Error al obtener categorías:", err);
         if (isMounted) {
           setError(err);
           setLoading(false);
@@ -43,40 +42,28 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
       isMounted = false;
     };
   }, []);
-  console.log(`Uso del sessionStorage: ${JSON.stringify(sessionStorage).length / 1024} KB`);
-  
+
   const cargarImagenesConCache = async (categorias) => {
     const nuevasFotos = {};
     for (const categoria of categorias) {
       const cachedImage = sessionStorage.getItem(`imagen_cat_${categoria.id}`);
-  
       if (cachedImage) {
-        console.log(`Imagen recuperada del cache para categoría ${categoria.id}: ${cachedImage}`);
         nuevasFotos[categoria.id] = cachedImage;
       } else if (!fotosCategorias[categoria.id]) {
         try {
           const imagenes = await get_imagenes_cat(categoria.id);
-          console.log(`id categoria: imagen_cat_${categoria.id}  ${imagenes.path}`);
-  
-          // Si imagenes es un objeto en lugar de un array
           if (imagenes && imagenes.path) {
             const imageUrl = `http://arcaweb.test/${imagenes.path}`;
-            console.log(`URL generada para la imagen de categoría ${categoria.id}: ${imageUrl}`);
             nuevasFotos[categoria.id] = imageUrl;
             sessionStorage.setItem(`imagen_cat_${categoria.id}`, imageUrl);
-            console.log(`Imagen almacenada en sessionStorage para categoría ${categoria.id}`);
-          } else {
-            console.warn(`No se encontraron imágenes para la categoría ${categoria.id}`);
           }
         } catch (error) {
           console.error(`Error al obtener imágenes para categoría ${categoria.id}:`, error);
         }
       }
     }
-  
     setFotosCategorias((prevFotos) => ({ ...prevFotos, ...nuevasFotos }));
   };
-  
 
   const cargarImagenesThrottledConCache = throttle(cargarImagenesConCache, 2000);
 
@@ -85,31 +72,47 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
     getValor(id);
   };
 
-  if (loading) return <Typography>Cargando...</Typography>;
-  if (error) return <Typography>Error al cargar datos</Typography>;
+  if (loading) return <LoadingComponent loading={loading} />
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
-      <Box sx={{ display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap', padding: '1rem', gap: '1rem' }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      {/* Menú de categorías con scroll horizontal */}
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: {md:'center', sm:'start' }, // Alineación inicial
+          overflowX: 'auto', 
+          whiteSpace: 'nowrap', 
+          padding: '1rem', 
+          gap: '1rem',
+          width: '100%',
+          minWidth: '100%',  // Asegura que el contenedor ocupe todo el ancho necesario para el contenido
+          boxSizing: 'border-box',  // Asegura que el padding no afecte el tamaño del contenedor
+          scrollSnapType: 'x mandatory', // Permite que el scroll horizontal sea más fluido
+        }}
+      >
+        {/* Categoría Todos */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '80px' }}>
           <LazyLoad height={200} offset={100} once>
             <img
               src={`../../../../public/Hamburguesas.jpg`}
               alt={'imgTodos'}
               onClick={() => handleCategoriaClick(null)}
-              style={{ width: '40px', height: '40px', cursor: 'pointer' }}
+              style={{ width: '40px', height: '40px', cursor: 'pointer', objectFit: 'contain' }} // Ajuste de object-fit
             />
           </LazyLoad>
           <Typography>Todos</Typography>
         </Box>
+
+        {/* Categorías dinámicas */}
         {data.map(item => (
-          <Box key={item.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Box key={item.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '80px' }}>
             <LazyLoad height={200} offset={100} once>
               <img
                 src={fotosCategorias[item.id] || `${ruta}/${item.nombre}.jpg`}
                 alt={item.nombre}
                 onClick={() => handleCategoriaClick(item.id)}
-                style={{ width: '40px', height: '40px', cursor: 'pointer' }}
+                style={{ width: '40px', height: '40px', cursor: 'pointer', objectFit: 'contain' }} // Ajuste de object-fit
               />
             </LazyLoad>
             <Typography>{item.nombre}</Typography>
@@ -117,6 +120,7 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
         ))}
       </Box>
 
+      {/* Botón de carrito flotante */}
       <IconButton
         aria-label="show cart items"
         color="inherit"
