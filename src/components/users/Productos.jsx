@@ -72,21 +72,29 @@ function Productos() {
   // Fusionar carritos de guest y user al iniciar sesión
   useEffect(() => {
     if (user) {
-      const userId = String(user.user.id); // Asegurarse de que userId sea una cadena
+      const userId = String(user.user.id); // Asegúrate de que userId sea una cadena
       const comprasGuest = getCompras("guest");
-      if (comprasGuest.length > 0) {
-        const comprasUsuario = getCompras(userId);
-        const nuevasCompras = mergeCarts(userId);
+      const updatedCompras = getCompras(userId);
+      setCompra(updatedCompras);
+      setCarrito(updatedCompras.length);
 
+      if (comprasGuest.length > 0) {
+        // Fusiona los carritos
+        mergeCarts(userId);
+
+        // Actualiza el estado con el carrito fusionado
+        const nuevasCompras = getCompras(userId);
         setCompra(nuevasCompras);
-        setCompras(nuevasCompras, user.user.id);
       }
     }
   }, [user]);
 
   useEffect(() => {
-    setCompras(getCompras(userId));
-  }, [userId]);
+    if (user) {
+      const userId = String(user.user.id); // Asegúrate de que userId sea una cadena
+      setCompra(getCompras(userId));
+    }
+  }, [user]);
 
   useEffect(() => {
     let newTotal = 0;

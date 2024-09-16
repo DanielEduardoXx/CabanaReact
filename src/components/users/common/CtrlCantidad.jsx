@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 function CtrlCantidad({ noProductos, getCantidad }) {
   const [cantidad, setCantidad] = useState(0);
 
+  // Actualiza el estado de cantidad cuando cambie la prop noProductos
   useEffect(() => {
     if (noProductos != null) {
       setCantidad(noProductos);
@@ -16,7 +17,7 @@ function CtrlCantidad({ noProductos, getCantidad }) {
     const nuevaCantidad = cantidad + 1;
     setCantidad(nuevaCantidad);
     if (getCantidad) {
-      getCantidad(nuevaCantidad);
+      getCantidad(nuevaCantidad); // Propaga la nueva cantidad
     }
   };
 
@@ -24,7 +25,7 @@ function CtrlCantidad({ noProductos, getCantidad }) {
     const nuevaCantidad = cantidad - 1 >= 0 ? cantidad - 1 : 0;
     setCantidad(nuevaCantidad);
     if (getCantidad) {
-      getCantidad(nuevaCantidad);
+      getCantidad(nuevaCantidad); // Propaga la nueva cantidad
     }
   };
 
@@ -37,10 +38,10 @@ function CtrlCantidad({ noProductos, getCantidad }) {
         type="number"
         value={cantidad}
         onChange={(e) => {
-          const nuevaCantidad = parseInt(e.target.value) || 0;
+          const nuevaCantidad = parseInt(e.target.value, 10) || 0; // Asegúrate de que sea un número entero
           setCantidad(nuevaCantidad);
           if (getCantidad) {
-            getCantidad(nuevaCantidad);
+            getCantidad(nuevaCantidad); // Propaga la nueva cantidad
           }
         }}
         InputProps={{ inputProps: { min: 0 } }}
