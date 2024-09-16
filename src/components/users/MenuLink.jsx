@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -16,13 +16,16 @@ import { MyContext } from '../../services/MyContext';
 
 const pages = ['inicio', 'productos', 'contacto', 'registro', 'iniciar-sesion'];
 const pagerUser = ['inicio', 'productos', 'contacto', 'perfil'];
-const settings = ['Profile', 'Account', 'Dashboard'];
+const settings = ['perfil'];
 
 function MenuLink() {
   const navigate = useNavigate();
   const { user, setUser } = useContext(MyContext);
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
+  const anchorRef = useRef(null);
+
+
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -41,9 +44,24 @@ function MenuLink() {
   };
 
   const handleLogout = () => {
-    console.log('cerrar sesion');
+
+    // Cerrar el menú de usuario antes de ejecutar la lógica de logout
+    handleCloseUserMenu();
+    console.log('cerrar sesión');
+    let datosUsuario = sessionStorage.getItem('user')
+    const usuario = JSON.parse(datosUsuario);
+
+    let id = usuario.user.id;
+
+    if (id) {
+      sessionStorage.removeItem('user')
+      sessionStorage.removeItem('profileImage')
+      sessionStorage.removeItem('profileImageId')
+    } else {
+      console.log('salio mal')
+    }
     setUser(null);
-    navigate('/iniciar-sesion');
+    navigate('/inicio');
   };
 
   const menuItems = user ? pagerUser : pages;
@@ -86,12 +104,12 @@ function MenuLink() {
               anchorEl={anchorElNav}
               anchorOrigin={{
                 vertical: 'bottom',
-                horizontal: 'left',
+                horizontal: 'right',
               }}
               keepMounted
               transformOrigin={{
                 vertical: 'top',
-                horizontal: 'left',
+                horizontal: 'right',
               }}
               open={Boolean(anchorElNav)}
               onClose={handleCloseNavMenu}
@@ -142,44 +160,41 @@ function MenuLink() {
             ))}
           </Box>
 
-          <Box sx={{ flexGrow: 0 }}>
-
-            <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
-              </IconButton>
-            </Tooltip>
-            <Menu
-              sx={{ mt: '45px' }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-        
-        
-              {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography textAlign="center">......{setting}</Typography>
-                </MenuItem>
-              ))}
-
-              {user && (
+    
+          {/* Menú de usuario, se muestra solo si el usuario está autenticado */}
+          {user && (
+            <Box sx={{ flexGrow: 0 }}>
+              <Tooltip title="Abrir menú de usuario">
+                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                  <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                </IconButton>
+              </Tooltip>
+              <Menu
+                sx={{ mt: '45px' }}
+                id="menu-appbar"
+                anchorEl={anchorElUser}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                open={Boolean(anchorElUser)}
+                onClose={handleCloseUserMenu}
+              >
+                {settings.map((setting) => (
+                  <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                    <Typography textAlign="center">{setting}</Typography>
+                  </MenuItem>
+                ))}
                 <MenuItem onClick={handleLogout}>
                   <Typography textAlign="center">Logout</Typography>
                 </MenuItem>
-              )}
-            </Menu>
-          </Box>
+              </Menu>
+            </Box>
+          )}
         </Toolbar>
       </Container>
     </AppBar>
