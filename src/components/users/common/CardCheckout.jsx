@@ -6,6 +6,7 @@ import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import { MyContext } from "../../../services/MyContext";
 import { ventasUser, detVentasUser } from '../../../services/ventasUser';
+import AlertDesconectado from './AlertDesconectado';
 
 const StyledForm = styled('form')(({ theme }) => ({
     '& > *': {
@@ -60,13 +61,13 @@ function CardCheckout() {
                     }, 0);
                     return acc + totalPromocion;
                 }
-            
+
                 // Si es un producto regular
                 const precioProducto = item.producto.precio_producto ? parseFloat(item.producto.precio_producto) : 0;
                 const cantidad = item.cantidad ? parseInt(item.cantidad, 10) : 0;
                 return acc + (precioProducto * cantidad);
             }, 0);
-            
+
             setTotal(newTotal);  // Asigna el nuevo total
 
             // Verifica si el carrito contiene promociones
@@ -139,27 +140,27 @@ function CardCheckout() {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-    
+
         // Validación de campos
         if (!formData.metodo_pago || !formData.tipo_de_entrega) {
             setError('El método de Pago y Tipo de Entrega son obligatorios');
             return;
         }
-    
+
         if (formData.tipo_de_entrega === 'entrega_en_domicilio' && !formData.address_ventas) {
             setError('La dirección de entrega es obligatoria');
             return;
         }
-    
+
         if (formData.tipo_de_entrega === 'recoger_en_sucursal') {
             formData.address_ventas = null;
         }
-    
+
         try {
             // Enviar la venta
             const ventaData = { ...formData, user_id: user.user.id };
             const ventaResponse = await ventasUser(ventaData);
-    
+
             if (ventaResponse && ventaResponse.data) {
                 const ventaId = ventaResponse.data.id;
                 setVentaId(ventaId);
@@ -169,21 +170,21 @@ function CardCheckout() {
                 const storedVentas = JSON.parse(localStorage.getItem(key)) || [];
                 const updatedVentas = [...storedVentas, ventaId];
                 localStorage.setItem(key, JSON.stringify(updatedVentas));
-    
+
                 // Preparar los datos para detalles de la venta
                 const detVentaData = {
                     detalles: compra.flatMap(item => {
-                
+
                         console.log("tem", compra);
                         console.log("teeem", item.producto.nom_promo);
                         console.log("teeem", item.producto);
-                
+
                         if (item.producto.detpromociones && item.producto.detpromociones.length > 0) {
                             // Detalles de la promoción: mapeo de los productos dentro de las promociones
                             return item.producto.detpromociones.map(promo => ({
                                 nom_producto: promo.producto.nom_producto, // Accede al nombre del producto
                                 pre_producto: promo.producto.
-                                precio_producto, // Accede al precio del producto
+                                    precio_producto, // Accede al precio del producto
                                 cantidad: promo.cantidad, // Cantidad dentro de la promoción
                                 subtotal: promo.subtotal, // Subtotal calculado
                                 descuento: promo.descuento, // Descuento específico de la promoción
@@ -191,14 +192,14 @@ function CardCheckout() {
                                 promocione_id: promo.promocione_id, // ID de la promoción
                                 venta_id: ventaId // ID de la venta
                             }));
-                
+
                         } else {
                             // Detalles de un producto normal (sin promoción)
-                            const nomProducto = item.producto.nom_producto ||0;
+                            const nomProducto = item.producto.nom_producto || 0;
                             const preProducto = item.producto.precio_producto || 1;
                             const cantidad = parseInt(item.cantidad, 10);
                             const subtotal = parseFloat(preProducto) * cantidad;
-                
+
                             return [{
                                 nom_producto: nomProducto,
                                 pre_producto: preProducto,
@@ -210,15 +211,15 @@ function CardCheckout() {
                     }),
                     total: total // El total de la venta
                 };
-    
+
                 // Validación de datos
                 if (detVentaData.detalles.some(detalle => !detalle.nom_producto || isNaN(detalle.pre_producto) || isNaN(detalle.cantidad) || isNaN(detalle.subtotal))) {
                     throw new Error('Datos inválidos en los detalles de la venta');
                 }
-    
+
                 console.log('Datos enviados:', detVentaData);
                 await detVentasUser(detVentaData);
-    
+
                 // Actualizar localStorage y limpiar carrito
                 const cartKey = `cart_${user.user.id}`;
                 const comprasKey = `compras_${user.user.id}`;
@@ -226,10 +227,10 @@ function CardCheckout() {
                 const storedCompras = JSON.parse(localStorage.getItem(comprasKey)) || [];
                 const updatedCompras = [...storedCompras, ...storedCart];
                 localStorage.setItem(comprasKey, JSON.stringify(updatedCompras));
-    
+
                 localStorage.removeItem(cartKey);
                 localStorage.removeItem(`cantidades_${user.user.id}`);
-    
+
                 // Limpiar estado
                 setCompra([]);
                 setTotal(0);
@@ -239,6 +240,10 @@ function CardCheckout() {
             console.error('Error al enviar los detalles de la venta:', error.message);
         }
     };
+
+    if (!user) {
+        return <AlertDesconectado />;
+    }
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem' }}>

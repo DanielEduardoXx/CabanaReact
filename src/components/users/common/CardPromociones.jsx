@@ -3,6 +3,7 @@ import CtrlCantidad from "./CtrlCantidad";
 import { useState, useEffect, useContext } from "react";
 import { MyContext } from "../../../services/MyContext";
 import LazyLoad from "react-lazyload";
+import LoadingComponent from "./LoadingComponent";
 
 function CardProducto({ productos, fotosProductos, agregarCompra, actualizarCantidad, eliminarProducto, noProductos }) {
   const { user } = useContext(MyContext);
@@ -74,7 +75,7 @@ function CardProducto({ productos, fotosProductos, agregarCompra, actualizarCant
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <CircularProgress />
+        <LoadingComponent />
       </Box>
     );
   }

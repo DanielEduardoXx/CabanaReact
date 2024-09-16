@@ -11,6 +11,7 @@ import Stack from '@mui/material/Stack';
 import TablaInformacion from "./TablaComprasUser.jsx";
 import { getAllCompras } from "../../../services/ventasUser.js";
 import { useNavigate } from "react-router-dom";
+import LoadingComponent from "./LoadingComponent.jsx";
 
 const style = {
     position: 'absolute',
@@ -327,12 +328,9 @@ const Perfil = () => {
     };
 
     if (loading) {
-        return <Typography>Cargando...</Typography>;
+        return <LoadingComponent />;
     }
 
-    if (!user) {
-        return <AlertDesconectado />;
-    }
 
     return (
         <>
