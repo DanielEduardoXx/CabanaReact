@@ -17,10 +17,10 @@ const DashboardComponent = () => {
           <h3>Productos más vendidos</h3>
           <ProductoMasVendidoChart />
         </div>
-        <div className="chart">
+        {/*<div className="chart">
           <h3>Promociones con más unidades vendidas</h3>
           <PromocionMasVendidasChart />
-        </div>
+        </div>*/}
       </div>
     </div>
   );

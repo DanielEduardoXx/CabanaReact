@@ -117,8 +117,8 @@ const styles = {
   const handleEditSugerenciaSubmit = async (event) => {
     event.preventDefault();
     const editedSugerenciaData = {
-
-      sugerencia: event.target.sugerencia.value,
+      hechos: event.target.hechos.value,
+      pretensiones: event.target.pretesiones.value,
       tipo_suge: event.target.tipo_suge.value,
       estado: event.target.estado.value,
       user_id: event.target.user_id.value,
@@ -192,17 +192,18 @@ const styles = {
       <Box sx={styles.subBox}>
         <Typography variant="h6">Sugerencias</Typography>
       </Box>
-     {/* <Box sx={styles.subBox}>
-        <Button variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }} >
+     <Box sx={styles.subBox}>
+       { /*<Button variant="contained" sx={{ backgroundColor: "#E3C800", color: "#fff" }} >
           Nuevo
-        </Button>
-      </Box>*/}
+        </Button>*/}
+      </Box>
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Id</TableCell>
-              <TableCell>Tipo sugerencia</TableCell>
+              <TableCell>Hechos</TableCell>
+              <TableCell>Pretensiones</TableCell>
               <TableCell>Estado</TableCell>
               <TableCell>Id Usuario</TableCell>
               <TableCell>Acciones</TableCell>
@@ -214,7 +215,8 @@ const styles = {
             {filteredSugerenciasData.map((sugerencia,id) => (
               <TableRow key={id}>
                 <TableCell>{sugerencia.id}</TableCell>
-                <TableCell>{sugerencia.tipo_suge}</TableCell>
+                <TableCell>{sugerencia.hechos}</TableCell>
+                <TableCell>{sugerencia.pretensiones}</TableCell>
                 <TableCell>{sugerencia.estado}</TableCell>
                 <TableCell>{sugerencia.user_id}</TableCell>
                 <TableCell>
@@ -265,8 +267,8 @@ const styles = {
           {selectedSugerencia && (
             <>
               <Typography>Id: {selectedSugerencia.id}</Typography>
-              <Typography>Sugerencia: {selectedSugerencia.sugerencia}</Typography>
-              <Typography>Tipo Sugerencia: {selectedSugerencia.tipo_suge}</Typography>
+              <Typography>Hechos: {selectedSugerencia.hechos}</Typography>
+              <Typography>Pretensiones: {selectedSugerencia.pretensiones}</Typography>
               <Typography>Estado: {selectedSugerencia.estado}</Typography>
               <Typography>Id Usuario: {selectedSugerencia.user_id}</Typography>
               <Box sx={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
@@ -283,8 +285,8 @@ const styles = {
     <Typography variant="h6">Editar Sugerencia</Typography>
     {selectedSugerencia && (
       <form onSubmit={handleEditSugerenciaSubmit}>
-        <TextField id="sugerencia" label="Sugerencia" fullWidth margin="normal" defaultValue={selectedSugerencia.sugerencia} disabled />
-        <TextField id="tipo_suge" label="Tipo Sugerencia" fullWidth margin="normal" defaultValue={selectedSugerencia.tipo_suge} disabled />
+        <TextField id="hechos" label="hechos" fullWidth margin="normal" defaultValue={selectedSugerencia.hechos} disabled />
+        <TextField id="pretensiones" label="Pretensiones" fullWidth margin="normal" defaultValue={selectedSugerencia.pretensiones} disabled />
         <Select id="estado" name="estado" fullWidth margin="normal" defaultValue={selectedSugerencia.estado}>
           <MenuItem value="en proceso">En Proceso</MenuItem>
           <MenuItem value="resuelta">Resuelta</MenuItem>
