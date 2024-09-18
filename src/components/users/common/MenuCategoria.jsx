@@ -95,13 +95,13 @@ function MenuCategoria({ onCategoriaSelect, noCompras, openModal, getValor }) {
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '80px' }}>
           <LazyLoad height={200} offset={100} once>
             <img
-              src={`../../../../public/Hamburguesas.jpg`}
+              src={`../../../../public/plato.png`}
               alt={'imgTodos'}
               onClick={() => handleCategoriaClick(null)}
               style={{ width: '40px', height: '40px', cursor: 'pointer', objectFit: 'contain' }} // Ajuste de object-fit
             />
           </LazyLoad>
-          <Typography>Todos</Typography>
+          <Typography>Menú</Typography>
         </Box>
 
         {/* Categorías dinámicas */}
