@@ -12,6 +12,7 @@ import TablaInformacion from "./TablaComprasUser.jsx";
 import { getAllCompras } from "../../../services/ventasUser.js";
 import { useNavigate } from "react-router-dom";
 import LoadingComponent from "./LoadingComponent.jsx";
+import PicPerfil from "./PicPerfil.jsx";
 
 const style = {
     position: 'absolute',
@@ -22,6 +23,7 @@ const style = {
     border: '2px solid #000',
     boxShadow: 24,
     p: 4,
+    width:'50%'
 };
 
 const StyledForm = styled('form')(({ theme }) => ({
@@ -176,72 +178,70 @@ const Perfil = () => {
     };
 
 
+// Función para manejar el cambio de foto
+const handleChangeFoto = async (e) => {
+    e.preventDefault();
+    const userId = user?.user?.id;
 
+    if (!userId) {
+        setMessage("User ID is undefined");
+        return;
+    }
 
-    // Función para manejar el cambio de foto
-    const handleChangeFoto = async (e) => {
-        e.preventDefault();
-        const userId = user?.user?.id;
-
-        if (!userId) {
-            setMessage("User ID is undefined");
+    try {
+        // Verificar que haya una imagen seleccionada
+        if (!selectedImage) {
+            setMessage('Por favor seleccione una imagen para actualizar.');
             return;
         }
 
-        try {
-            // Verificar que haya una imagen seleccionada
-            if (!selectedImage) {
-                setMessage('Por favor seleccione una imagen para actualizar.');
+        // Crear una nueva instancia de FormData
+        const formData = new FormData();
+        formData.append('imageable_type', 'users');
+        formData.append('imageable_id', userId);
+        formData.append('image', selectedImage);
+
+        // Mostrar el contenido de FormData en la consola
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}:`, value);
+        }
+
+        // Intentar obtener el imageId desde sessionStorage (si ya se subió una imagen antes)
+        let imageId = sessionStorage.getItem('profileImageId');
+
+        if (imageId === null) { // `null` o vacío significa que no hay una imagen
+            console.log('No hay imagen, creando una nueva...');
+
+            try {
+                // Crear nueva imagen
+                imageId = await fotoPerfil(userId, selectedImage);
+                setMessage('Imagen de perfil creada con éxito');
+            } catch (error) {
+                setMessage('Error al crear la imagen: ' + error.message);
                 return;
             }
 
-            // Crear una nueva instancia de FormData
-            const formData = new FormData();
-            formData.append('imageable_type', 'users');
-            formData.append('imageable_id', userId);
-            formData.append('image', selectedImage);
+            // Guardar el nuevo imageId en sessionStorage para futuras actualizaciones
+            sessionStorage.setItem('profileImageId', imageId);
+        } else {
+            // Si ya existe una imagen, actualízala
+            console.log('Imagen existente, actualizando...');
 
-            // Mostrar el contenido de FormData en la consola
-            for (let [key, value] of formData.entries()) {
-                console.log(`${key}:`, value);
+            try {
+                await updateFoto(imageId, userId, selectedImage);
+                setMessage('Foto de Perfil actualizada con éxito');
+            } catch (error) {
+                setMessage('Error al actualizar la imagen: ' + error.message);
+                return;
             }
-
-            // Intentar obtener el imageId desde sessionStorage (si ya se subió una imagen antes)
-            let imageId = sessionStorage.getItem('profileImageId');
-
-            if (!imageId) {
-                // Si no hay imageId, significa que no hay una imagen existente, por lo que se creará una nueva
-                console.log('No hay imagen, creando una nueva...');
-
-                try {
-                    // Crear nueva imagen
-                    imageId = await fotoPerfil(userId, selectedImage);
-                    setMessage('Imagen de perfil creada con éxito');
-                } catch (error) {
-                    setMessage('Error al crear la imagen: ' + error.message);
-                    return;
-                }
-
-                // Guardar el nuevo imageId en sessionStorage para futuras actualizaciones
-                sessionStorage.setItem('profileImageId', imageId);
-            } else {
-                // Si ya existe una imagen, actualízala
-                console.log('Imagen existente, actualizando...');
-
-                try {
-                    await updateFoto(imageId, userId, selectedImage);
-                    setMessage('Foto de Perfil actualizada con éxito');
-                } catch (error) {
-                    setMessage('Error al actualizar la imagen: ' + error.message);
-                    return;
-                }
-            }
-
-            window.location.reload(); // Recargar la página después de actualizar o crear la imagen
-        } catch (error) {
-            setMessage('Error inesperado: ' + error.message);
         }
-    };
+
+        window.location.reload(); // Recargar la página después de actualizar o crear la imagen
+    } catch (error) {
+        setMessage('Error inesperado: ' + error.message);
+    }
+};
+
 
 
 
@@ -281,7 +281,7 @@ const Perfil = () => {
             }
 
             // Eliminar imageId en sessionStorage para futuras actualizaciones
-            sessionStorage.removeItem('profileImageId', imageId);
+            sessionStorage.removeItem('profileImageId');
 
             window.location.reload(); // Recargar la página después de actualizar o crear la imagen
         } catch (error) {
@@ -352,7 +352,7 @@ const Perfil = () => {
                             {profileImage ? (
                                 <img src={profileImage} alt="Foto de perfil" style={{ width: '150px', height: '150px', borderRadius: '50%' }} />
                             ) : (
-                                <p>No se pudo cargar la imagen de perfil</p>
+                                <PicPerfil />
                             )}
                         </Button>
 
@@ -403,9 +403,9 @@ const Perfil = () => {
                             <Box sx={style}>
                                 <StyledForm noValidate autoComplete="off" onSubmit={handleSubmit} sx={{ width: '100%' }}>
                                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                        <TextField sx={{ margin: '5px 0', width: { xs: '100%' } }} required name="id" label="Cédula" variant="outlined" value={formData.id} onChange={handleChange} />
-                                        <TextField sx={{ margin: '5px 0', width: { xs: '100%' } }} required name="name" label="Nombre" variant="outlined" value={formData.name} onChange={handleChange} />
-                                        <TextField sx={{ margin: '5px 0', width: { xs: '100%' } }} required name="email" label="Correo" variant="outlined" value={formData.email} onChange={handleChange} />
+                                        <TextField sx={{ margin: '5px 0', width: { xs: '100%' } }} required name="id" label="Cédula" variant="outlined" value={formData.id} onChange={handleChange} disabled/>
+                                        <TextField sx={{ margin: '5px 0', width: { xs: '100%' } }} required name="name" label="Nombre" variant="outlined" value={formData.name} onChange={handleChange} disabled/>
+                                        <TextField sx={{ margin: '5px 0', width: { xs: '100%' } }} required name="email" label="Correo" variant="outlined" value={formData.email} onChange={handleChange} disabled/>
                                         <TextField sx={{ margin: '5px 0', width: { xs: '100%' } }} required name="direccion" label="Dirección" variant="outlined" value={formData.direccion} onChange={handleChange} />
                                         <TextField sx={{ margin: '5px 0', width: { xs: '100%' } }} required name="tel" label="Teléfono" variant="outlined" value={formData.tel} onChange={handleChange} />
                                     </Box>
@@ -453,7 +453,7 @@ const Perfil = () => {
                                         {profileImage ? (
                                             <img src={profileImage} alt="Foto de perfil" style={{ width: '150px', height: '150px', borderRadius: '50%' }} />
                                         ) : (
-                                            <p>No se pudo cargar la imagen de perfil</p>
+                                            <PicPerfil />
                                         )}
                                     </Button>
 

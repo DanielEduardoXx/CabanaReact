@@ -104,6 +104,35 @@ export const fotoPerfil = async (userId, image) => {
                 throw new Error('No se encontró el ID de la imagen existente para actualizar.');
             }
         } else {
+            if (error.response?.status === 401) {
+                // Intentar refrescar el token y reintentar
+                try {
+                    const newSession = await refresh_token();
+                    if (newSession && newSession.token?.access_token) {
+                        token = newSession.token.access_token;
+                        setToken(token);
+    
+                        const retryResponse = await axios.post(`${API_URL}/${imageId}`, formData, {
+                            headers: {
+                                'Content-Type': 'multipart/form-data',
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+    
+                        if (retryResponse.status === 201) {
+                            console.log('Imagen actualizada correctamente después de reintentar');
+                            return retryResponse.data;
+                        } else {
+                            throw new Error('Error en la respuesta del servidor al reintentar');
+                        }
+                    } else {
+                        throw new Error('No se pudo obtener un nuevo token de acceso');
+                    }
+                } catch (refreshError) {
+                    console.error('Error al refrescar el token:', refreshError);
+                    throw refreshError;
+                }
+            }
             console.error('Error al subir la imagen:', error.response?.data?.message || error.message);
             throw error;
         }
@@ -208,7 +237,7 @@ export const eliminarFoto = async (imageId, userId) => {
                     token = newSession.token.access_token;
                     setToken(token);
 
-                    const retryResponse = await axios.delete(`${API_URL}/users/${userId}/${imageId}`, formData, {
+                    const retryResponse = await axios.delete(`${API_URL}/users/${userId}/${imageId}`, {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                             'Authorization': `Bearer ${token}`
