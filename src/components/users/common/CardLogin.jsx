@@ -52,7 +52,7 @@ export default function CardLogin() {
               height: '3rem',
             }} />
 
-          <h1>Sing in</h1>
+          <h1>Ingresar</h1>
 
         </Box>
 
