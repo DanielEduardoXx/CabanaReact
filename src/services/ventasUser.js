@@ -112,7 +112,7 @@ export const detVentasUser = async (detVentaData) => {
                     token = newSession.token.access_token;
                     setToken(token);
 
-                    const retryResponse = await axios.post(API_URL, ventaData, {
+                    const retryResponse = await axios.post(API_DET_URL, detVentaData, {
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
@@ -208,15 +208,15 @@ export const detPromocionUser = async (detPromocionData) => {
     }
 };
 
-
 export const deleteVentaUser = async (id) => {
-    let token = getToken(); // Usa let para permitir la actualización del token
+    let token = getToken(); // Obtener el token de sesión actual
     if (!token) {
-        throw new Error('Token no Disponible');
+        throw new Error('Token no disponible');
     }
 
     try {
         // Realiza la solicitud DELETE con el token actual
+        console.log('Token utilizado:', token); // Verifica el token
         const response = await axios.delete(`${API_DELETE_URL}/${id}`, {
             headers: {
                 'Content-Type': 'application/json',
@@ -232,6 +232,10 @@ export const deleteVentaUser = async (id) => {
         }
     } catch (error) {
         console.error('Error en deleteVentaUser:', error);
+
+        if (error.response) {
+            console.log('Detalles de la respuesta:', error.response.data); // Verifica el mensaje del backend
+        }
 
         // Si el error es 401 (No autorizado), intenta refrescar el token
         if (error.response?.status === 401) {
@@ -266,6 +270,10 @@ export const deleteVentaUser = async (id) => {
         }
 
         // Manejo de otros errores
+        if (error.response?.status === 403) {
+            console.error('Error 403 - Forbidden: El usuario no tiene permisos para realizar esta acción.');
+        }
+
         if (axios.isAxiosError(error)) {
             const errorMessage = error.response?.data?.error || 'Error desconocido';
             throw new Error(errorMessage);
@@ -274,6 +282,7 @@ export const deleteVentaUser = async (id) => {
         }
     }
 };
+
 
 
 
