@@ -137,7 +137,6 @@ function CardCheckout() {
     }, [error]);
 
 
-
     const handleSubmit = async (event) => {
         event.preventDefault();
 
@@ -157,46 +156,39 @@ function CardCheckout() {
         }
 
         try {
-            // Enviar la venta
+            // Enviar la venta principal
             const ventaData = { ...formData, user_id: user.user.id };
             const ventaResponse = await ventasUser(ventaData);
 
             if (ventaResponse && ventaResponse.data) {
-                const ventaId = ventaResponse.data.id;
-                setVentaId(ventaId);
-                console.log(">>>", ventaId)
+                const ventaId = ventaResponse.data.id;  // Obtén el ID de la venta
+                setVentaId(ventaId);  // Actualiza el estado del ID de la venta
+
                 // Guardar el ID de la venta en localStorage
                 const key = `venta_${user.user.id}`;
                 const storedVentas = JSON.parse(localStorage.getItem(key)) || [];
                 const updatedVentas = [...storedVentas, ventaId];
                 localStorage.setItem(key, JSON.stringify(updatedVentas));
 
-                // Preparar los datos para detalles de la venta
+                // Preparar los detalles de la venta
                 const detVentaData = {
                     detalles: compra.flatMap(item => {
-
-                        console.log("tem", compra);
-                        console.log("teeem", item.producto.nom_promo);
-                        console.log("teeem", item.producto);
-
                         if (item.producto.detpromociones && item.producto.detpromociones.length > 0) {
-                            // Detalles de la promoción: mapeo de los productos dentro de las promociones
+                            // Si el producto tiene promociones
                             return item.producto.detpromociones.map(promo => ({
-                                nom_producto: promo.producto.nom_producto, // Accede al nombre del producto
-                                pre_producto: promo.producto.
-                                    precio_producto, // Accede al precio del producto
-                                cantidad: promo.cantidad, // Cantidad dentro de la promoción
-                                subtotal: promo.subtotal, // Subtotal calculado
-                                descuento: promo.descuento, // Descuento específico de la promoción
-                                porcentaje: promo.porcentaje || 18, // Porcentaje si existe, 0 si no
-                                promocione_id: promo.promocione_id, // ID de la promoción
-                                venta_id: ventaId // ID de la venta
+                                nom_producto: promo.producto.nom_producto,
+                                pre_producto: promo.producto.precio_producto,
+                                cantidad: promo.cantidad,
+                                subtotal: promo.subtotal,
+                                descuento: promo.descuento,
+                                porcentaje: promo.porcentaje || 18,
+                                promocione_id: promo.promocione_id,
+                                venta_id: ventaId
                             }));
-
                         } else {
-                            // Detalles de un producto normal (sin promoción)
-                            const nomProducto = item.producto.nom_producto || 0;
-                            const preProducto = item.producto.precio_producto || 1;
+                            // Si es un producto normal
+                            const nomProducto = item.producto.nom_producto || '';
+                            const preProducto = item.producto.precio_producto || 0;
                             const cantidad = parseInt(item.cantidad, 10);
                             const subtotal = parseFloat(preProducto) * cantidad;
 
@@ -209,32 +201,42 @@ function CardCheckout() {
                             }];
                         }
                     }),
-                    total: total // El total de la venta
+                    total: total // Total de la venta
                 };
 
-                // Validación de datos
+                // Validar los datos de los detalles
                 if (detVentaData.detalles.some(detalle => !detalle.nom_producto || isNaN(detalle.pre_producto) || isNaN(detalle.cantidad) || isNaN(detalle.subtotal))) {
                     throw new Error('Datos inválidos en los detalles de la venta');
                 }
 
+                // Enviar los detalles de la venta
                 console.log('Datos enviados:', detVentaData);
-                await detVentasUser(detVentaData);
+                await detVentasUser(detVentaData);  // Llama a la API de detalles de ventas
 
-                // Actualizar localStorage y limpiar carrito
+                // Actualizar localStorage y limpiar el carrito
                 const cartKey = `cart_${user.user.id}`;
                 const comprasKey = `compras_${user.user.id}`;
                 const storedCart = JSON.parse(localStorage.getItem(cartKey)) || [];
                 const storedCompras = JSON.parse(localStorage.getItem(comprasKey)) || [];
-                const updatedCompras = [...storedCompras, ...storedCart];
-                localStorage.setItem(comprasKey, JSON.stringify(updatedCompras));
 
+                // Agregar el ventaId a cada compra antes de almacenarla
+                const updatedCompras = storedCart.map(item => ({
+                    ...item,
+                    venta_id: ventaId  // Añadir el ID de la venta al objeto de la compra
+                }));
+
+                // Combinar las compras actuales con las nuevas
+                const finalCompras = [...storedCompras, ...updatedCompras];
+                localStorage.setItem(comprasKey, JSON.stringify(finalCompras));
+
+                // Limpiar el carrito y el localStorage
                 localStorage.removeItem(cartKey);
                 localStorage.removeItem(`cantidades_${user.user.id}`);
 
                 // Limpiar estado
                 setCompra([]);
                 setTotal(0);
-                setOpen(true);  // Abrir el modal
+                setOpen(true);  // Abre el modal de confirmación
             }
         } catch (error) {
             console.error('Error al enviar los detalles de la venta:', error.message);
