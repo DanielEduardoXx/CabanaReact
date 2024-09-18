@@ -60,6 +60,7 @@ function Productos() {
   const [openDialog, setOpenDialog] = useState(false);
   const [fotosProductos, setFotosProductos] = useState({});
   const [loadedImages, setLoadedImages] = useState({}); // Estado para rastrear imágenes cargadas
+  
   // const { cargarImagenes } = useImagenes();
 
   const [compras, setCompras] = useState(getCompras(userId));
@@ -68,6 +69,36 @@ function Productos() {
   const handleCantidadChange = (cantidad) => {
     setNoCompras(cantidad);
   };
+  
+ // Manejo de la carga de imágenes
+ useEffect(() => {
+  if (productos && Array.isArray(productos)) {
+    const imagePromises = productos.map(async (producto) => {
+      if (fotosProductos[producto.id]) {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.src = fotosProductos[producto.id];
+          img.onload = () => resolve(producto.id);
+          img.onerror = () => resolve(null);
+        });
+      }
+      return Promise.resolve(null);
+    });
+
+    Promise.all(imagePromises).then((loadedImageIds) => {
+      setLoadedImages((prev) => {
+        const images = {};
+        loadedImageIds.forEach((id) => {
+          if (id) images[id] = fotosProductos[id];
+        });
+        return images;
+      });
+      setLoading(false);
+    });
+  } else {
+    setLoading(false);
+  }
+}, [productos, fotosProductos]);
 
   // Fusionar carritos de guest y user al iniciar sesión
   useEffect(() => {
