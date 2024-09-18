@@ -184,14 +184,14 @@ export default function CamposRegistro() {
                 const response = await registro.registrarUsuario(formData);
                 setTimeout(() => {
                     navigate('../iniciar-sesion');
-                }, 2000);
-                setRegistroSatisfactorio('¡Enhorabuena! Te haz registrado Correctamente');
+                }, 5000);
+                setRegistroSatisfactorio('¡Enhorabuena! Revisa tu correo para activar tu cuenta!');
                 console.log('Success:', response);
             } catch (error) {
-                console.error('Error:', error.response?.data || error.message);
-                if (error) {
-                    setErrorId('Error:', error);
-                }
+                console.error('Error:', error.response?.data.messages.email[0] || error.messages);
+
+                setErrorId('Error: ', error.response?.data.messages.email[0]);
+
             }
         }
     };
@@ -362,7 +362,7 @@ export default function CamposRegistro() {
                             helperText={errors.tel}
 
                         />
-{/* 
+                        {/* 
                         <TextField
 
                             sx={{ display: 'none' }}
