@@ -13,6 +13,7 @@ import BtnCarrito from './components/users/common/BtnInfoCarrito.jsx';
 import SolicitudEmail from './components/users/common/SolicitudEmail.jsx';
 import CodeEmailConfirmation from './components/users/common/CodeEmailConfirmation.jsx';
 import { MyContext } from './services/MyProvider.jsx';
+import VerificacionCuenta from './components/users/common/VerificacionCuenta.jsx';
 // import { ImagenesProvider } from './services/MyContext.jsx';
 
 const UserApp = () => {
@@ -33,6 +34,7 @@ const UserApp = () => {
         <Route path="checkout" element={<CardCheckout />} />
         <Route path="SolicitudEmail" element={<SolicitudEmail />} />
         <Route path="CodeEmailConfirmation" element={<CodeEmailConfirmation />} />
+        <Route path="VerificacionCuenta" element={<VerificacionCuenta />} />
       </Routes>
     <Footer />
   </>
